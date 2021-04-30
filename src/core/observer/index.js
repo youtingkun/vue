@@ -34,6 +34,11 @@ export function toggleObserving (value: boolean) {
  * object's property keys into getter/setters that
  * collect dependencies and dispatch updates.
  */
+/**
+ * @description:通过递归的方式把一个对象的所有属性都转化成可观测对象
+ * @param {*}
+ * @return {*}
+ */
 export class Observer {
   value: any;
   dep: Dep;
@@ -107,6 +112,7 @@ function copyAugment (target: Object, src: Object, keys: Array<string>) {
  * returns the new observer if successfully observed,
  * or the existing observer if the value already has one.
  */
+
 export function observe (value: any, asRootData: ?boolean): Observer | void {
   if (!isObject(value) || value instanceof VNode) {
     return
@@ -141,14 +147,17 @@ export function defineReactive (
 ) {
   const dep = new Dep()
 
+  // 如果属性不能重新定义，直接返回
   const property = Object.getOwnPropertyDescriptor(obj, key)
   if (property && property.configurable === false) {
     return
   }
 
   // cater for pre-defined getter/setters
+  // 获得原有的get和set
   const getter = property && property.get
   const setter = property && property.set
+  // 如果存在不存在get或者存在set，并且
   if ((!getter || setter) && arguments.length === 2) {
     val = obj[key]
   }

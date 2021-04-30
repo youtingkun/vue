@@ -21,6 +21,7 @@ Vue.prototype.$mount = function (
 ): Component {
   el = el && query(el)
 
+  // 对 el 做了限制，Vue 不能挂载在 body、html 这样的根节点上
   /* istanbul ignore if */
   if (el === document.body || el === document.documentElement) {
     process.env.NODE_ENV !== 'production' && warn(

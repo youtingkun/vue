@@ -8,6 +8,7 @@ import { def } from '../util/index'
 const arrayProto = Array.prototype
 export const arrayMethods = Object.create(arrayProto)
 
+// vue重写数组对象的方法
 const methodsToPatch = [
   'push',
   'pop',

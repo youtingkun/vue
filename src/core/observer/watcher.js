@@ -24,6 +24,11 @@ let uid = 0
  * and fires callback when the expression value changes.
  * This is used for both the $watch() api and directives.
  */
+/**
+ * @description: Watcher类
+ * @param {*}
+ * @return {*}
+ */
 export default class Watcher {
   vm: Component;
   expression: string;
@@ -73,6 +78,10 @@ export default class Watcher {
     this.newDeps = []
     this.depIds = new Set()
     this.newDepIds = new Set()
+    // 这里的expression就是从lifecycle.js传过来的updateComponent。
+    // "function () {
+    //   vm._update(vm._render(), hydrating);
+    // }"
     this.expression = process.env.NODE_ENV !== 'production'
       ? expOrFn.toString()
       : ''

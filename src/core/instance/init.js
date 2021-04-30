@@ -65,6 +65,7 @@ export function initMixin (Vue: Class<Component>) {
       measure(`vue ${vm._name} init`, startTag, endTag)
     }
 
+    // 这里的el就是我们传入的根组件的id选择器#app，通过monut函数挂载到页面上
     if (vm.$options.el) {
       vm.$mount(vm.$options.el)
     }

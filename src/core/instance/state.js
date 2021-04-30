@@ -110,6 +110,7 @@ function initProps (vm: Component, propsOptions: Object) {
   toggleObserving(true)
 }
 
+// 初始化data值
 function initData (vm: Component) {
   let data = vm.$options.data
   data = vm._data = typeof data === 'function'
@@ -145,6 +146,11 @@ function initData (vm: Component) {
         vm
       )
     } else if (!isReserved(key)) {
+      /**
+       * @description: 代理函数
+       * @param {*}
+       * @return {*}
+       */
       proxy(vm, `_data`, key)
     }
   }

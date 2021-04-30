@@ -65,7 +65,11 @@ export function renderMixin (Vue: Class<Component>) {
   Vue.prototype.$nextTick = function (fn: Function) {
     return nextTick(fn, this)
   }
-
+  /**
+   * @description: Vue 的 _render 方法是实例的一个私有方法，它用来把实例渲染成一个虚拟 Node。
+   * @param {*}
+   * @return {*}
+   */
   Vue.prototype._render = function (): VNode {
     const vm: Component = this
     const { render, _parentVnode } = vm.$options

@@ -56,6 +56,12 @@ export function initLifecycle (vm: Component) {
 }
 
 export function lifecycleMixin (Vue: Class<Component>) {
+  /**
+   * @description: _render调用的_update方法，作用是把 VNode 渲染成真实的 DOM
+   * @param {*} vnode
+   * @param {*} hydrating
+   * @return {*}
+   */
   Vue.prototype._update = function (vnode: VNode, hydrating?: boolean) {
     const vm: Component = this
     const prevEl = vm.$el
@@ -138,6 +144,11 @@ export function lifecycleMixin (Vue: Class<Component>) {
   }
 }
 
+/**
+ * @description: mount实际调用方法的实现。mountComponent 核心就是先实例化一个渲染Watcher，在它的回调函数中会调用 updateComponent 方法，在此方法中调用 vm._render 方法先生成虚拟 Node，最终调用 vm._update 更新 DOM。
+ * @param {*}
+ * @return {*}
+ */
 export function mountComponent (
   vm: Component,
   el: ?Element,

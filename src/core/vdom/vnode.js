@@ -1,5 +1,9 @@
 /* @flow */
-
+/**
+ * @description: vue当中VNode的定义
+ * @param {*}
+ * @return {*}
+ */
 export default class VNode {
   tag: string | void;
   data: VNodeData | void;
