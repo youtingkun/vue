@@ -759,12 +759,18 @@ function processComponent (el) {
   }
 }
 
+/**
+ * @description: 解析标签中的属性
+ * @param {*} el
+ * @return {*}
+ */
 function processAttrs (el) {
   const list = el.attrsList
   let i, l, name, rawName, value, modifiers, syncGen, isDynamic
   for (i = 0, l = list.length; i < l; i++) {
     name = rawName = list[i].name
     value = list[i].value
+    // 解析以v-开头的修饰符
     if (dirRE.test(name)) {
       // mark element as dynamic
       el.hasBindings = true
@@ -845,12 +851,13 @@ function processAttrs (el) {
         } else {
           addAttr(el, name, value, list[i], isDynamic)
         }
-      } else if (onRE.test(name)) { // v-on
+      } else if (onRE.test(name)) { // 解析v-on修饰符
         name = name.replace(onRE, '')
         isDynamic = dynamicArgRE.test(name)
         if (isDynamic) {
           name = name.slice(1, -1)
         }
+        // 处理v-on修饰符的方法
         addHandler(el, name, value, modifiers, false, warn, list[i], isDynamic)
       } else { // normal directives
         name = name.replace(dirRE, '')

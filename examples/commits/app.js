@@ -19,9 +19,18 @@ new Vue({
   created: function () {
     this.fetchData()
   },
+  beforeCreate(){
+  },
 
   watch: {
     currentBranch: 'fetchData'
+  },
+  computed:{
+     c1:{
+       get(){
+          return 1
+       }
+     }
   },
 
   filters: {

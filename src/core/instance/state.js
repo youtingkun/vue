@@ -46,36 +46,38 @@ export function proxy (target: Object, sourceKey: string, key: string) {
   Object.defineProperty(target, key, sharedPropertyDefinition)
 }
 
+
 export function initState (vm: Component) {
   vm._watchers = []
   const opts = vm.$options
-  if (opts.props) initProps(vm, opts.props)
-  if (opts.methods) initMethods(vm, opts.methods)
-  if (opts.data) {
+  if (opts.props) initProps(vm, opts.props) // 初始化props
+  if (opts.methods) initMethods(vm, opts.methods) // 初始化methods
+  if (opts.data) { // 初始化data
     initData(vm)
-  } else {
+  } else { //如果没有，就把data当作空对象并将其转换成响应式
     observe(vm._data = {}, true /* asRootData */)
   }
-  if (opts.computed) initComputed(vm, opts.computed)
-  if (opts.watch && opts.watch !== nativeWatch) {
+  if (opts.computed) initComputed(vm, opts.computed) // 初始化computed
+  if (opts.watch && opts.watch !== nativeWatch) { // 初始化watch,从这里我们就知道是先实例化computed，再实例化的watch
     initWatch(vm, opts.watch)
   }
 }
 
+
 function initProps (vm: Component, propsOptions: Object) {
-  const propsData = vm.$options.propsData || {}
-  const props = vm._props = {}
+  const propsData = vm.$options.propsData || {} // 父组件传入的真实props数据。
+  const props = vm._props = {} // 指向vm._props的指针
   // cache prop keys so that future props updates can iterate using Array
   // instead of dynamic object key enumeration.
-  const keys = vm.$options._propKeys = []
-  const isRoot = !vm.$parent
+  const keys = vm.$options._propKeys = []  // 指向vm.$options._propKeys的指针，缓存props对象中的key
+  const isRoot = !vm.$parent //当前组件是否为根组件
   // root instance props should be converted
   if (!isRoot) {
     toggleObserving(false)
   }
   for (const key in propsOptions) {
     keys.push(key)
-    const value = validateProp(key, propsOptions, propsData, vm)
+    const value = validateProp(key, propsOptions, propsData, vm) // 校验父组件传入的props数据类型是否匹配并获取到传入的值value
     /* istanbul ignore else */
     if (process.env.NODE_ENV !== 'production') {
       const hyphenatedKey = hyphenate(key)
@@ -191,6 +193,7 @@ function initComputed (vm: Component, computed: Object) {
 
     if (!isSSR) {
       // create internal watcher for the computed property.
+      // computed里面也是调用的watcher类使对象变为响应式
       watchers[key] = new Watcher(
         vm,
         getter || noop,
@@ -202,9 +205,11 @@ function initComputed (vm: Component, computed: Object) {
     // component-defined computed properties are already defined on the
     // component prototype. We only need to define computed properties defined
     // at instantiation here.
+    // 如果当前属性不存在实例上，则调用defineComputed函数为实例vm上设置计算属性
+    // 这就是为什么我们在computed里面写了属性之后，可以直接通过实例访问到
     if (!(key in vm)) {
       defineComputed(vm, key, userDef)
-    } else if (process.env.NODE_ENV !== 'production') {
+    } else if (process.env.NODE_ENV !== 'production') { //则在非生产环境下抛出警告
       if (key in vm.$data) {
         warn(`The computed property "${key}" is already defined in data.`, vm)
       } else if (vm.$options.props && key in vm.$options.props) {
@@ -216,6 +221,11 @@ function initComputed (vm: Component, computed: Object) {
   }
 }
 
+/**
+ * @description: defineComputed具体实现函数
+ * @param {*}
+ * @return {*}
+ */
 export function defineComputed (
   target: any,
   key: string,

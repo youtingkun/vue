@@ -361,6 +361,7 @@
     'filter'
   ];
 
+  // 定义的所有生命周期钩子函数
   var LIFECYCLE_HOOKS = [
     'beforeCreate',
     'created',
@@ -1292,6 +1293,14 @@
   /**
    * Hooks and props are merged as arrays.
    */
+  /**
+   * @description: 生命周期钩子函数合并
+   * 如果 childVal不存在，就返回 parentVal；
+   * 否则再判断是否存在 parentVal，如果存在就把 childVal 添加到 parentVal 后返回新数组；
+   * 否则返回 childVal 的数组
+   * @param {*}
+   * @return {*}
+   */
   function mergeHook (
     parentVal,
     childVal
@@ -1444,12 +1453,23 @@
    * Ensure all props option syntax are normalized into the
    * Object-based format.
    */
+  /**
+   * @description: 对传入的props格式进行统一化处理，最终都会变为以下形式
+   * props: {
+      name:{
+          type: xxx
+      }
+     }
+   * @param {*} options
+   * @param {*} vm
+   * @return {*}
+   */
   function normalizeProps (options, vm) {
     var props = options.props;
     if (!props) { return }
     var res = {};
     var i, val, name;
-    if (Array.isArray(props)) {
+    if (Array.isArray(props)) {//props为数组的情况
       i = props.length;
       while (i--) {
         val = props[i];
@@ -1460,7 +1480,7 @@
           warn('props must be strings when using array syntax.');
         }
       }
-    } else if (isPlainObject(props)) {
+    } else if (isPlainObject(props)) {//props为对象的情况
       for (var key in props) {
         val = props[key];
         name = camelize(key);
@@ -1620,6 +1640,15 @@
 
 
 
+  /**
+   * @description:
+   * @param {*}
+   *  key:遍历propOptions时拿到的每个属性名。
+      propOptions:当前实例规范化后的props选项。
+      propsData:父组件传入的真实props数据。
+      vm:当前实例。
+   * @return {*}
+   */
   function validateProp (
     key,
     propOptions,
@@ -3935,11 +3964,21 @@
     }
   }
 
+  /**
+   * @description:其主要是给Vue实例上挂载了一些属性并设置了默认值
+   * @param {*} vm
+   * @return {*}
+   */
   function initLifecycle (vm) {
     var options = vm.$options;
 
     // locate first non-abstract parent
     var parent = options.parent;
+    /**
+     * @description: 如果当前组件不是抽象组件并且存在父级，那么就通过while循环来向上循环，
+   * 如果当前组件的父级是抽象组件并且也存在父级，那就继续向上查找当前组件父级的父级，
+   * 直到找到第一个不是抽象类型的父级时，将其赋值vm.$parent，同时把该实例自身添加进找到的父级的$children属性中
+     */
     if (parent && !options.abstract) {
       while (parent.$options.abstract && parent.$parent) {
         parent = parent.$parent;
@@ -4254,6 +4293,7 @@
   function callHook (vm, hook) {
     // #7573 disable dep collection when invoking lifecycle hooks
     pushTarget();
+    // 这里获取到的是一个钩子函数数组。因为有mixin，会存在多个同名的生命周期
     var handlers = vm.$options[hook];
     var info = hook + " hook";
     if (handlers) {
@@ -4680,36 +4720,38 @@
     Object.defineProperty(target, key, sharedPropertyDefinition);
   }
 
+
   function initState (vm) {
     vm._watchers = [];
     var opts = vm.$options;
-    if (opts.props) { initProps(vm, opts.props); }
-    if (opts.methods) { initMethods(vm, opts.methods); }
-    if (opts.data) {
+    if (opts.props) { initProps(vm, opts.props); } // 初始化props
+    if (opts.methods) { initMethods(vm, opts.methods); } // 初始化methods
+    if (opts.data) { // 初始化data
       initData(vm);
-    } else {
+    } else { //如果没有，就把data当作空对象并将其转换成响应式
       observe(vm._data = {}, true /* asRootData */);
     }
-    if (opts.computed) { initComputed(vm, opts.computed); }
-    if (opts.watch && opts.watch !== nativeWatch) {
+    if (opts.computed) { initComputed(vm, opts.computed); } // 初始化computed
+    if (opts.watch && opts.watch !== nativeWatch) { // 初始化watch,从这里我们就知道是先实例化computed，再实例化的watch
       initWatch(vm, opts.watch);
     }
   }
 
+
   function initProps (vm, propsOptions) {
-    var propsData = vm.$options.propsData || {};
-    var props = vm._props = {};
+    var propsData = vm.$options.propsData || {}; // 父组件传入的真实props数据。
+    var props = vm._props = {}; // 指向vm._props的指针
     // cache prop keys so that future props updates can iterate using Array
     // instead of dynamic object key enumeration.
-    var keys = vm.$options._propKeys = [];
-    var isRoot = !vm.$parent;
+    var keys = vm.$options._propKeys = [];  // 指向vm.$options._propKeys的指针，缓存props对象中的key
+    var isRoot = !vm.$parent; //当前组件是否为根组件
     // root instance props should be converted
     if (!isRoot) {
       toggleObserving(false);
     }
     var loop = function ( key ) {
       keys.push(key);
-      var value = validateProp(key, propsOptions, propsData, vm);
+      var value = validateProp(key, propsOptions, propsData, vm); // 校验父组件传入的props数据类型是否匹配并获取到传入的值value
       /* istanbul ignore else */
       {
         var hyphenatedKey = hyphenate(key);
@@ -4825,6 +4867,7 @@
 
       if (!isSSR) {
         // create internal watcher for the computed property.
+        // computed里面也是调用的watcher类使对象变为响应式
         watchers[key] = new Watcher(
           vm,
           getter || noop,
@@ -4836,9 +4879,11 @@
       // component-defined computed properties are already defined on the
       // component prototype. We only need to define computed properties defined
       // at instantiation here.
+      // 如果当前属性不存在实例上，则调用defineComputed函数为实例vm上设置计算属性
+      // 这就是为什么我们在computed里面写了属性之后，可以直接通过实例访问到
       if (!(key in vm)) {
         defineComputed(vm, key, userDef);
-      } else {
+      } else { //则在非生产环境下抛出警告
         if (key in vm.$data) {
           warn(("The computed property \"" + key + "\" is already defined in data."), vm);
         } else if (vm.$options.props && key in vm.$options.props) {
@@ -4850,6 +4895,11 @@
     }
   }
 
+  /**
+   * @description: defineComputed具体实现函数
+   * @param {*}
+   * @return {*}
+   */
   function defineComputed (
     target,
     key,
@@ -5012,7 +5062,11 @@
   /*  */
 
   var uid$2 = 0;
-
+  /**
+   * @description:initMixin只做了一件事，给Vue类的原型上绑定_init方法
+   * @param {*} Vue
+   * @return {*}
+   */
   function initMixin (Vue) {
     Vue.prototype._init = function (options) {
       var vm = this;
@@ -5036,6 +5090,7 @@
         // internal component options needs special treatment.
         initInternalComponent(vm, options);
       } else {
+        // 合并属性
         vm.$options = mergeOptions(
           resolveConstructorOptions(vm.constructor),
           options || {},
@@ -5048,14 +5103,14 @@
       }
       // expose real self
       vm._self = vm;
-      initLifecycle(vm);
-      initEvents(vm);
-      initRender(vm);
-      callHook(vm, 'beforeCreate');
-      initInjections(vm); // resolve injections before data/props
-      initState(vm);
-      initProvide(vm); // resolve provide after data/props
-      callHook(vm, 'created');
+      initLifecycle(vm); // 初始化生命周期
+      initEvents(vm);  // 初始化事件
+      initRender(vm); // 初始化渲染
+      callHook(vm, 'beforeCreate'); // 调用beforeCreate生命周期钩子函数
+      initInjections(vm); // resolve injections before data/props  //初始化injections
+      initState(vm); // 初始化props,methods,data,computed,watch
+      initProvide(vm); // resolve provide after data/props  // 初始化 provide
+      callHook(vm, 'created'); // 调用created生命周期钩子函数
 
       /* istanbul ignore if */
       if ( config.performance && mark) {
@@ -5505,6 +5560,11 @@
     // components with in Weex's multi-instance scenarios.
     Vue.options._base = Vue;
 
+    /**
+     * @description:把一些内置组件扩展到 Vue.options.components 上，Vue 的内置组件目前 有<keep-alive>、<transition> 和<transition-group> 组件
+     * @param {*}
+     * @return {*}
+     */
     extend(Vue.options.components, builtInComponents);
 
     initUse(Vue);
@@ -10378,12 +10438,18 @@
     }
   }
 
+  /**
+   * @description: 解析标签中的属性
+   * @param {*} el
+   * @return {*}
+   */
   function processAttrs (el) {
     var list = el.attrsList;
     var i, l, name, rawName, value, modifiers, syncGen, isDynamic;
     for (i = 0, l = list.length; i < l; i++) {
       name = rawName = list[i].name;
       value = list[i].value;
+      // 解析以v-开头的修饰符
       if (dirRE.test(name)) {
         // mark element as dynamic
         el.hasBindings = true;
@@ -10461,12 +10527,13 @@
           } else {
             addAttr(el, name, value, list[i], isDynamic);
           }
-        } else if (onRE.test(name)) { // v-on
+        } else if (onRE.test(name)) { // 解析v-on修饰符
           name = name.replace(onRE, '');
           isDynamic = dynamicArgRE.test(name);
           if (isDynamic) {
             name = name.slice(1, -1);
           }
+          // 处理v-on修饰符的方法
           addHandler(el, name, value, modifiers, false, warn$2, list[i], isDynamic);
         } else { // normal directives
           name = name.replace(dirRE, '');

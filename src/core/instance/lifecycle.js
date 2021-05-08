@@ -29,11 +29,21 @@ export function setActiveInstance(vm: Component) {
   }
 }
 
+/**
+ * @description:其主要是给Vue实例上挂载了一些属性并设置了默认值
+ * @param {*} vm
+ * @return {*}
+ */
 export function initLifecycle (vm: Component) {
   const options = vm.$options
 
   // locate first non-abstract parent
   let parent = options.parent
+  /**
+   * @description: 如果当前组件不是抽象组件并且存在父级，那么就通过while循环来向上循环，
+ * 如果当前组件的父级是抽象组件并且也存在父级，那就继续向上查找当前组件父级的父级，
+ * 直到找到第一个不是抽象类型的父级时，将其赋值vm.$parent，同时把该实例自身添加进找到的父级的$children属性中
+   */
   if (parent && !options.abstract) {
     while (parent.$options.abstract && parent.$parent) {
       parent = parent.$parent
@@ -348,6 +358,7 @@ export function deactivateChildComponent (vm: Component, direct?: boolean) {
 export function callHook (vm: Component, hook: string) {
   // #7573 disable dep collection when invoking lifecycle hooks
   pushTarget()
+  // 这里获取到的是一个钩子函数数组。因为有mixin，会存在多个同名的生命周期
   const handlers = vm.$options[hook]
   const info = `${hook} hook`
   if (handlers) {

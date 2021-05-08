@@ -11,7 +11,11 @@ import { initProvide, initInjections } from './inject'
 import { extend, mergeOptions, formatComponentName } from '../util/index'
 
 let uid = 0
-
+/**
+ * @description:initMixin只做了一件事，给Vue类的原型上绑定_init方法
+ * @param {*} Vue
+ * @return {*}
+ */
 export function initMixin (Vue: Class<Component>) {
   Vue.prototype._init = function (options?: Object) {
     const vm: Component = this
@@ -35,6 +39,7 @@ export function initMixin (Vue: Class<Component>) {
       // internal component options needs special treatment.
       initInternalComponent(vm, options)
     } else {
+      // 合并属性
       vm.$options = mergeOptions(
         resolveConstructorOptions(vm.constructor),
         options || {},
@@ -49,14 +54,14 @@ export function initMixin (Vue: Class<Component>) {
     }
     // expose real self
     vm._self = vm
-    initLifecycle(vm)
-    initEvents(vm)
-    initRender(vm)
-    callHook(vm, 'beforeCreate')
-    initInjections(vm) // resolve injections before data/props
-    initState(vm)
-    initProvide(vm) // resolve provide after data/props
-    callHook(vm, 'created')
+    initLifecycle(vm) // 初始化生命周期
+    initEvents(vm)  // 初始化事件
+    initRender(vm) // 初始化渲染
+    callHook(vm, 'beforeCreate') // 调用beforeCreate生命周期钩子函数
+    initInjections(vm) // resolve injections before data/props  //初始化injections
+    initState(vm) // 初始化props,methods,data,computed,watch
+    initProvide(vm) // resolve provide after data/props  // 初始化 provide
+    callHook(vm, 'created') // 调用created生命周期钩子函数
 
     /* istanbul ignore if */
     if (process.env.NODE_ENV !== 'production' && config.performance && mark) {

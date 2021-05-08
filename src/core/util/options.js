@@ -143,6 +143,14 @@ strats.data = function (
 /**
  * Hooks and props are merged as arrays.
  */
+/**
+ * @description: 生命周期钩子函数合并
+ * 如果 childVal不存在，就返回 parentVal；
+ * 否则再判断是否存在 parentVal，如果存在就把 childVal 添加到 parentVal 后返回新数组；
+ * 否则返回 childVal 的数组
+ * @param {*}
+ * @return {*}
+ */
 function mergeHook (
   parentVal: ?Array<Function>,
   childVal: ?Function | ?Array<Function>
@@ -295,12 +303,23 @@ export function validateComponentName (name: string) {
  * Ensure all props option syntax are normalized into the
  * Object-based format.
  */
+/**
+ * @description: 对传入的props格式进行统一化处理，最终都会变为以下形式
+ * props: {
+    name:{
+        type: xxx
+    }
+   }
+ * @param {*} options
+ * @param {*} vm
+ * @return {*}
+ */
 function normalizeProps (options: Object, vm: ?Component) {
   const props = options.props
   if (!props) return
   const res = {}
   let i, val, name
-  if (Array.isArray(props)) {
+  if (Array.isArray(props)) {//props为数组的情况
     i = props.length
     while (i--) {
       val = props[i]
@@ -311,7 +330,7 @@ function normalizeProps (options: Object, vm: ?Component) {
         warn('props must be strings when using array syntax.')
       }
     }
-  } else if (isPlainObject(props)) {
+  } else if (isPlainObject(props)) {//props为对象的情况
     for (const key in props) {
       val = props[key]
       name = camelize(key)

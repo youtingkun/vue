@@ -18,6 +18,15 @@ type PropOptions = {
   validator: ?Function
 };
 
+/**
+ * @description:
+ * @param {*}
+ *  key:遍历propOptions时拿到的每个属性名。
+    propOptions:当前实例规范化后的props选项。
+    propsData:父组件传入的真实props数据。
+    vm:当前实例。
+ * @return {*}
+ */
 export function validateProp (
   key: string,
   propOptions: Object,
