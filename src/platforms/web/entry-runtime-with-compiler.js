@@ -15,6 +15,7 @@ const idToTemplate = cached(id => {
 })
 
 const mount = Vue.prototype.$mount
+// web端调用的原型上的render函数
 Vue.prototype.$mount = function (
   el?: string | Element,
   hydrating?: boolean
@@ -56,6 +57,16 @@ Vue.prototype.$mount = function (
       }
     } else if (el) {
       template = getOuterHTML(el)
+
+      // function getOuterHTML (el) {
+      //   if (el.outerHTML) {
+      //     return el.outerHTML
+      //   } else {
+      //     var container = document.createElement('div');
+      //     container.appendChild(el.cloneNode(true));
+      //     return container.innerHTML
+      //   }
+      // }
     }
     if (template) {
       /* istanbul ignore if */
@@ -63,6 +74,7 @@ Vue.prototype.$mount = function (
         mark('compile')
       }
 
+      // 把模板编译成渲染函数
       const { render, staticRenderFns } = compileToFunctions(template, {
         outputSourceRange: process.env.NODE_ENV !== 'production',
         shouldDecodeNewlines,

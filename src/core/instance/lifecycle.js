@@ -110,12 +110,13 @@ export function lifecycleMixin (Vue: Class<Component>) {
     }
   }
 
+  // 原型上的destory方法
   Vue.prototype.$destroy = function () {
     const vm: Component = this
     if (vm._isBeingDestroyed) {
       return
     }
-    callHook(vm, 'beforeDestroy')
+    callHook(vm, 'beforeDestroy') // beforeDestroy钩子函数调用
     vm._isBeingDestroyed = true
     // remove self from parent
     const parent = vm.$parent
@@ -140,7 +141,7 @@ export function lifecycleMixin (Vue: Class<Component>) {
     // invoke destroy hooks on current rendered tree
     vm.__patch__(vm._vnode, null)
     // fire destroyed hook
-    callHook(vm, 'destroyed')
+    callHook(vm, 'destroyed') // destroyed钩子函数调用
     // turn off all instance listeners.
     vm.$off()
     // remove __vue__ reference
@@ -155,7 +156,9 @@ export function lifecycleMixin (Vue: Class<Component>) {
 }
 
 /**
- * @description: mount实际调用方法的实现。mountComponent 核心就是先实例化一个渲染Watcher，在它的回调函数中会调用 updateComponent 方法，在此方法中调用 vm._render 方法先生成虚拟 Node，最终调用 vm._update 更新 DOM。
+ * @description: mount实际调用方法的实现。
+ * mountComponent 核心就是先实例化一个渲染Watcher，在它的回调函数中会调用 updateComponent 方法，
+ * 在此方法中调用 vm._render 方法先生成虚拟 Node，最终调用 vm._update 更新 DOM。
  * @param {*}
  * @return {*}
  */
@@ -185,7 +188,7 @@ export function mountComponent (
       }
     }
   }
-  callHook(vm, 'beforeMount')
+  callHook(vm, 'beforeMount') //beforeMount钩子函数调用
 
   let updateComponent
   /* istanbul ignore if */
@@ -218,7 +221,7 @@ export function mountComponent (
   new Watcher(vm, updateComponent, noop, {
     before () {
       if (vm._isMounted && !vm._isDestroyed) {
-        callHook(vm, 'beforeUpdate')
+        callHook(vm, 'beforeUpdate') // beforeUpdate钩子函数调用
       }
     }
   }, true /* isRenderWatcher */)
@@ -228,7 +231,7 @@ export function mountComponent (
   // mounted is called for render-created child components in its inserted hook
   if (vm.$vnode == null) {
     vm._isMounted = true
-    callHook(vm, 'mounted')
+    callHook(vm, 'mounted') // mounted钩子函数调用
   }
   return vm
 }

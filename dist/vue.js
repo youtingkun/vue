@@ -4045,12 +4045,13 @@
       }
     };
 
+    // 原型上的destory方法
     Vue.prototype.$destroy = function () {
       var vm = this;
       if (vm._isBeingDestroyed) {
         return
       }
-      callHook(vm, 'beforeDestroy');
+      callHook(vm, 'beforeDestroy'); // beforeDestroy钩子函数调用
       vm._isBeingDestroyed = true;
       // remove self from parent
       var parent = vm.$parent;
@@ -4075,7 +4076,7 @@
       // invoke destroy hooks on current rendered tree
       vm.__patch__(vm._vnode, null);
       // fire destroyed hook
-      callHook(vm, 'destroyed');
+      callHook(vm, 'destroyed'); // destroyed钩子函数调用
       // turn off all instance listeners.
       vm.$off();
       // remove __vue__ reference
@@ -4090,7 +4091,9 @@
   }
 
   /**
-   * @description: mount实际调用方法的实现。mountComponent 核心就是先实例化一个渲染Watcher，在它的回调函数中会调用 updateComponent 方法，在此方法中调用 vm._render 方法先生成虚拟 Node，最终调用 vm._update 更新 DOM。
+   * @description: mount实际调用方法的实现。
+   * mountComponent 核心就是先实例化一个渲染Watcher，在它的回调函数中会调用 updateComponent 方法，
+   * 在此方法中调用 vm._render 方法先生成虚拟 Node，最终调用 vm._update 更新 DOM。
    * @param {*}
    * @return {*}
    */
@@ -4120,7 +4123,7 @@
         }
       }
     }
-    callHook(vm, 'beforeMount');
+    callHook(vm, 'beforeMount'); //beforeMount钩子函数调用
 
     var updateComponent;
     /* istanbul ignore if */
@@ -4153,7 +4156,7 @@
     new Watcher(vm, updateComponent, noop, {
       before: function before () {
         if (vm._isMounted && !vm._isDestroyed) {
-          callHook(vm, 'beforeUpdate');
+          callHook(vm, 'beforeUpdate'); // beforeUpdate钩子函数调用
         }
       }
     }, true /* isRenderWatcher */);
@@ -4163,7 +4166,7 @@
     // mounted is called for render-created child components in its inserted hook
     if (vm.$vnode == null) {
       vm._isMounted = true;
-      callHook(vm, 'mounted');
+      callHook(vm, 'mounted'); // mounted钩子函数调用
     }
     return vm
   }
@@ -5009,6 +5012,7 @@
     return vm.$watch(expOrFn, handler, options)
   }
 
+  //向Vue原型上挂载vm.$set、vm.$delete和vm.$wa  tch三个实例方法
   function stateMixin (Vue) {
     // flow somehow has problems with directly declared definition object
     // when using Object.defineProperty, so we have to procedurally build up
@@ -5106,11 +5110,11 @@
       initLifecycle(vm); // 初始化生命周期
       initEvents(vm);  // 初始化事件
       initRender(vm); // 初始化渲染
-      callHook(vm, 'beforeCreate'); // 调用beforeCreate生命周期钩子函数
+      callHook(vm, 'beforeCreate'); // beforeCreate钩子函数调用
       initInjections(vm); // resolve injections before data/props  //初始化injections
       initState(vm); // 初始化props,methods,data,computed,watch
       initProvide(vm); // resolve provide after data/props  // 初始化 provide
-      callHook(vm, 'created'); // 调用created生命周期钩子函数
+      callHook(vm, 'created'); // created钩子函数调用
 
       /* istanbul ignore if */
       if ( config.performance && mark) {
@@ -9196,7 +9200,7 @@
 
   // public mount method
   /**
-   * @description:原型上的 $mount 方法定义
+   * @description:原型上的 $mount 方法,这里是没有compiler的版本，打包之后会变为有compiler的版本。
    * @param {el}它表示挂载的元素，可以是字符串，也可以是 DOM 对象，如果是字符串在浏览器环境下会调用 query 方法转换成 DOM 对象
    * @return {hydrating}参数是和服务端渲染相关，在浏览器环境下我们不需要传第二个参数。
    */
@@ -12013,14 +12017,18 @@
   // `createCompilerCreator` allows creating compilers that use alternative
   // parser/optimizer/codegen, e.g the SSR optimizing compiler.
   // Here we just export a default compiler using the default parts.
+  // 用户把模板编译成可以调用的render()函数
   var createCompiler = createCompilerCreator(function baseCompile (
     template,
     options
   ) {
+    // 模板解析阶段：用正则等方式解析 template 模板中的指令、class、style等数据，形成AST
     var ast = parse(template.trim(), options);
     if (options.optimize !== false) {
+      // 优化阶段：遍历AST，找出其中的静态节点，并打上标记；
       optimize(ast, options);
     }
+    // 代码生成阶段：将AST转换成渲染函数；
     var code = generate(ast, options);
     return {
       ast: ast,
@@ -12057,6 +12065,7 @@
   });
 
   var mount = Vue.prototype.$mount;
+  // web端调用的原型上的render函数
   Vue.prototype.$mount = function (
     el,
     hydrating
@@ -12098,6 +12107,16 @@
         }
       } else if (el) {
         template = getOuterHTML(el);
+
+        // function getOuterHTML (el) {
+        //   if (el.outerHTML) {
+        //     return el.outerHTML
+        //   } else {
+        //     var container = document.createElement('div');
+        //     container.appendChild(el.cloneNode(true));
+        //     return container.innerHTML
+        //   }
+        // }
       }
       if (template) {
         /* istanbul ignore if */
@@ -12105,6 +12124,7 @@
           mark('compile');
         }
 
+        // 把模板编译成渲染函数
         var ref = compileToFunctions(template, {
           outputSourceRange: "development" !== 'production',
           shouldDecodeNewlines: shouldDecodeNewlines,

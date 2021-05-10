@@ -335,6 +335,7 @@ function createWatcher (
   return vm.$watch(expOrFn, handler, options)
 }
 
+//向Vue原型上挂载vm.$set、vm.$delete和vm.$wa  tch三个实例方法
 export function stateMixin (Vue: Class<Component>) {
   // flow somehow has problems with directly declared definition object
   // when using Object.defineProperty, so we have to procedurally build up

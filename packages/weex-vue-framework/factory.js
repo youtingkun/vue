@@ -4540,7 +4540,7 @@ function callUpdatedHooks (queue) {
     var watcher = queue[i];
     var vm = watcher.vm;
     if (vm._watcher === watcher && vm._isMounted && !vm._isDestroyed) {
-      callHook(vm, 'updated');
+      callHook(vm, 'updated'); // updated钩子函数调用
     }
   }
 }

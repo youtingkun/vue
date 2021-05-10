@@ -57,11 +57,11 @@ export function initMixin (Vue: Class<Component>) {
     initLifecycle(vm) // 初始化生命周期
     initEvents(vm)  // 初始化事件
     initRender(vm) // 初始化渲染
-    callHook(vm, 'beforeCreate') // 调用beforeCreate生命周期钩子函数
+    callHook(vm, 'beforeCreate') // beforeCreate钩子函数调用
     initInjections(vm) // resolve injections before data/props  //初始化injections
     initState(vm) // 初始化props,methods,data,computed,watch
     initProvide(vm) // resolve provide after data/props  // 初始化 provide
-    callHook(vm, 'created') // 调用created生命周期钩子函数
+    callHook(vm, 'created') // created钩子函数调用
 
     /* istanbul ignore if */
     if (process.env.NODE_ENV !== 'production' && config.performance && mark) {
