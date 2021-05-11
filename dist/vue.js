@@ -934,15 +934,15 @@
     this.value = value;
     this.dep = new Dep();
     this.vmCount = 0;
-    def(value, '__ob__', this);
-    if (Array.isArray(value)) {
+    def(value, '__ob__', this); //给value新增一个__ob__属性，值为该value的Observer实例
+    if (Array.isArray(value)) { //数组时的处理逻辑
       if (hasProto) {
         protoAugment(value, arrayMethods);
       } else {
         copyAugment(value, arrayMethods, arrayKeys);
       }
       this.observeArray(value);
-    } else {
+    } else { // 对象时的处理逻辑
       this.walk(value);
     }
   };
@@ -1021,7 +1021,10 @@
   }
 
   /**
-   * Define a reactive property on an Object.
+   * 使一个对象转化成可观测对象
+   * @param { Object } obj 对象
+   * @param { String } key 对象的key
+   * @param { Any } val 对象的某个key的值
    */
   function defineReactive (
     obj,
@@ -1042,7 +1045,7 @@
     // 获得原有的get和set
     var getter = property && property.get;
     var setter = property && property.set;
-    // 如果存在不存在get或者存在set，并且
+    // 如果不存在get或者存在set，并且参数的长度等于2
     if ((!getter || setter) && arguments.length === 2) {
       val = obj[key];
     }
@@ -12070,7 +12073,7 @@
     el,
     hydrating
   ) {
-    el = el && query(el);
+    el = el && query(el); //如果el不是一个元素，通过选择器查询到这个元素
 
     // 对 el 做了限制，Vue 不能挂载在 body、html 这样的根节点上
     /* istanbul ignore if */
@@ -12085,7 +12088,7 @@
     // resolve template/el and convert to render function
     if (!options.render) {
       var template = options.template;
-      if (template) {
+      if (template) { // 为模板的时候
         if (typeof template === 'string') {
           if (template.charAt(0) === '#') {
             template = idToTemplate(template);
@@ -12106,17 +12109,7 @@
           return this
         }
       } else if (el) {
-        template = getOuterHTML(el);
-
-        // function getOuterHTML (el) {
-        //   if (el.outerHTML) {
-        //     return el.outerHTML
-        //   } else {
-        //     var container = document.createElement('div');
-        //     container.appendChild(el.cloneNode(true));
-        //     return container.innerHTML
-        //   }
-        // }
+        template = getOuterHTML(el); // 获取元素的完整 HTML
       }
       if (template) {
         /* istanbul ignore if */
@@ -12124,7 +12117,7 @@
           mark('compile');
         }
 
-        // 把模板编译成渲染函数
+        // 根据模板和实例参数，编译成render渲染函数
         var ref = compileToFunctions(template, {
           outputSourceRange: "development" !== 'production',
           shouldDecodeNewlines: shouldDecodeNewlines,

@@ -20,7 +20,7 @@ Vue.prototype.$mount = function (
   el?: string | Element,
   hydrating?: boolean
 ): Component {
-  el = el && query(el)
+  el = el && query(el) //如果el不是一个元素，通过选择器查询到这个元素
 
   // 对 el 做了限制，Vue 不能挂载在 body、html 这样的根节点上
   /* istanbul ignore if */
@@ -35,7 +35,7 @@ Vue.prototype.$mount = function (
   // resolve template/el and convert to render function
   if (!options.render) {
     let template = options.template
-    if (template) {
+    if (template) { // 为模板的时候
       if (typeof template === 'string') {
         if (template.charAt(0) === '#') {
           template = idToTemplate(template)
@@ -56,17 +56,7 @@ Vue.prototype.$mount = function (
         return this
       }
     } else if (el) {
-      template = getOuterHTML(el)
-
-      // function getOuterHTML (el) {
-      //   if (el.outerHTML) {
-      //     return el.outerHTML
-      //   } else {
-      //     var container = document.createElement('div');
-      //     container.appendChild(el.cloneNode(true));
-      //     return container.innerHTML
-      //   }
-      // }
+      template = getOuterHTML(el) // 获取元素的完整 HTML
     }
     if (template) {
       /* istanbul ignore if */
@@ -74,7 +64,7 @@ Vue.prototype.$mount = function (
         mark('compile')
       }
 
-      // 把模板编译成渲染函数
+      // 根据模板和实例参数，编译成render渲染函数
       const { render, staticRenderFns } = compileToFunctions(template, {
         outputSourceRange: process.env.NODE_ENV !== 'production',
         shouldDecodeNewlines,

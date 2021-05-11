@@ -13,15 +13,22 @@ new Vue({
   data: {
     branches: ['master', 'dev'],
     currentBranch: 'master',
-    commits: null
+    commits: null,
+    a:1,
+    b:2,
   },
 
   created: function () {
     this.fetchData()
+    this.$watch('a', function (newVal, oldVal) {
+      console.log(newVal,oldVal);
+    })
   },
   beforeCreate(){
   },
-
+  mounted(){
+    this.a ++ 
+  },
   watch: {
     currentBranch: 'fetchData'
   },

@@ -48,15 +48,15 @@ export class Observer {
     this.value = value
     this.dep = new Dep()
     this.vmCount = 0
-    def(value, '__ob__', this)
-    if (Array.isArray(value)) {
+    def(value, '__ob__', this) //给value新增一个__ob__属性，值为该value的Observer实例
+    if (Array.isArray(value)) { //数组时的处理逻辑
       if (hasProto) {
         protoAugment(value, arrayMethods)
       } else {
         copyAugment(value, arrayMethods, arrayKeys)
       }
       this.observeArray(value)
-    } else {
+    } else { // 对象时的处理逻辑
       this.walk(value)
     }
   }
@@ -136,7 +136,10 @@ export function observe (value: any, asRootData: ?boolean): Observer | void {
 }
 
 /**
- * Define a reactive property on an Object.
+ * 使一个对象转化成可观测对象
+ * @param { Object } obj 对象
+ * @param { String } key 对象的key
+ * @param { Any } val 对象的某个key的值
  */
 export function defineReactive (
   obj: Object,
@@ -157,7 +160,7 @@ export function defineReactive (
   // 获得原有的get和set
   const getter = property && property.get
   const setter = property && property.set
-  // 如果存在不存在get或者存在set，并且
+  // 如果不存在get或者存在set，并且参数的长度等于2
   if ((!getter || setter) && arguments.length === 2) {
     val = obj[key]
   }
