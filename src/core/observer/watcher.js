@@ -26,6 +26,7 @@ let uid = 0
  */
 /**
  * @description: Watcher类
+ * 实例分为三种情况：渲染 watcher（render-watcher）、计算属性 watcher（computed-watcher）、侦听器 watcher（normal-watcher）
  * @param {*}
  * @return {*}
  */
@@ -109,10 +110,15 @@ export default class Watcher {
    * Evaluate the getter, and re-collect dependencies.
    */
   get () {
+    //收集依赖
     pushTarget(this)
     let value
     const vm = this.vm
     try {
+      // 这一步完成之后数据就会更新，因为这里调用的getter函数就是
+      // updateComponent = () => {
+      //   vm._update(vm._render(), hydrating)
+      // }
       value = this.getter.call(vm, vm)
     } catch (e) {
       if (this.user) {
@@ -126,6 +132,7 @@ export default class Watcher {
       if (this.deep) {
         traverse(value)
       }
+      /*将观察者实例从target栈中取出并设置给Dep.target*/
       popTarget()
       this.cleanupDeps()
     }
@@ -134,10 +141,13 @@ export default class Watcher {
 
   /**
    * Add a dependency to this directive.
+   * newDepIds是Set类型
+   * newDeps是数组类型
    */
   addDep (dep: Dep) {
     const id = dep.id
     if (!this.newDepIds.has(id)) {
+
       this.newDepIds.add(id)
       this.newDeps.push(dep)
       if (!this.depIds.has(id)) {
@@ -186,6 +196,7 @@ export default class Watcher {
    * Scheduler job interface.
    * Will be called by the scheduler.
    */
+  // 调度器接口
   run () {
     if (this.active) {
       const value = this.get()

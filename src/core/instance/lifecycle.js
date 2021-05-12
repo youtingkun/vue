@@ -67,7 +67,8 @@ export function initLifecycle (vm: Component) {
 
 export function lifecycleMixin (Vue: Class<Component>) {
   /**
-   * @description: _render调用的_update方法，作用是把 VNode 渲染成真实的 DOM
+   * @description: _render调用的_update方法，作用是把 VNode 渲染成真实的 DOM。
+   * 这一步完成之后，页面就会显示出检测对象的值。
    * @param {*} vnode
    * @param {*} hydrating
    * @return {*}
@@ -156,7 +157,7 @@ export function lifecycleMixin (Vue: Class<Component>) {
 }
 
 /**
- * @description: mount实际调用方法的实现。
+ * @description: mount实际调用方法的实现。此时render函数已经生成
  * mountComponent 核心就是先实例化一个渲染Watcher，在它的回调函数中会调用 updateComponent 方法，
  * 在此方法中调用 vm._render 方法先生成虚拟 Node，最终调用 vm._update 更新 DOM。
  * @param {*}
@@ -210,6 +211,7 @@ export function mountComponent (
       measure(`vue ${name} patch`, startTag, endTag)
     }
   } else {
+    // 生成updateComponent函数
     updateComponent = () => {
       vm._update(vm._render(), hydrating)
     }

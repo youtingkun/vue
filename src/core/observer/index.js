@@ -48,7 +48,7 @@ export class Observer {
     this.value = value
     this.dep = new Dep()
     this.vmCount = 0
-    def(value, '__ob__', this) //给value新增一个__ob__属性，值为该value的Observer实例
+    def(value, '__ob__', this) //给value新增一个__ob__属性，值为this,也就是该value的Observer实例
     if (Array.isArray(value)) { //数组时的处理逻辑
       if (hasProto) {
         protoAugment(value, arrayMethods)
@@ -66,6 +66,7 @@ export class Observer {
    * getter/setters. This method should only be called when
    * value type is Object.
    */
+  // 遍历对象的每一个属性，使之都变为响应式对象
   walk (obj: Object) {
     const keys = Object.keys(obj)
     for (let i = 0; i < keys.length; i++) {
@@ -148,6 +149,8 @@ export function defineReactive (
   customSetter?: ?Function,
   shallow?: boolean
 ) {
+  //监听属性key
+  //关键点：在闭包中声明一个Dep实例，用于保存watcher实例
   const dep = new Dep()
 
   // 如果属性不能重新定义，直接返回
@@ -157,10 +160,10 @@ export function defineReactive (
   }
 
   // cater for pre-defined getter/setters
-  // 获得原有的get和set
+  /*如果之前该对象已经预设了getter以及setter函数则将其取出来，新定义的getter/setter中会将其执行，保证不会覆盖之前已经定义的getter/setter。*/
   const getter = property && property.get
   const setter = property && property.set
-  // 如果不存在get或者存在set，并且参数的长度等于2
+  // 如果不存在get或者存在set，并且参数的长度等于2，设置val的值
   if ((!getter || setter) && arguments.length === 2) {
     val = obj[key]
   }
@@ -172,6 +175,8 @@ export function defineReactive (
     get: function reactiveGetter () {
       const value = getter ? getter.call(obj) : val
       if (Dep.target) {
+        // get的时候对数据进行劫持
+        //将dep放进当前观察者的deps中，同时，将该观察者放入dep中，等待变更通知
         dep.depend()
         if (childOb) {
           childOb.dep.depend()
@@ -200,6 +205,7 @@ export function defineReactive (
         val = newVal
       }
       childOb = !shallow && observe(newVal)
+      // 派发更新
       dep.notify()
     }
   })

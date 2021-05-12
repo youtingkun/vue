@@ -8,7 +8,30 @@
   <script src="../../dist/vue.js"></script>
 </head>
 <body>
-  <div id="app">{{a}}</div>
-  <script src="app.js"></script>
+  <div id="app" >
+    <div @click="handleAdd">{{a}}</div>
+    <div>{{b}}</div>
+  </div>
+  <script>
+    new Vue({
+      el: '#app',
+
+      data() {
+        return {a:1}
+      },
+      methods:{
+        handleAdd(){
+          this.a++
+        }
+      },
+      computed:{
+        b:{
+          get(){
+            return this.a *2;
+          }
+        }
+      }
+    })
+  </script>
 </body>
 </html>

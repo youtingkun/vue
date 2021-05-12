@@ -6,6 +6,7 @@ import { createCompileToFunctionFn } from './to-function'
 
 export function createCompilerCreator (baseCompile: Function): Function {
   return function createCompiler (baseOptions: CompilerOptions) {
+    // 模板编译函数
     function compile (
       template: string,
       options?: CompilerOptions

@@ -26,7 +26,7 @@ export function createCompileToFunctionFn (compile: Function): Function {
     options?: CompilerOptions,
     vm?: Component
   ): CompiledFunctionResult {
-    options = extend({}, options)
+    options = extend({}, options) // 把options中可以被遍历的属性取出来，
     const warn = options.warn || baseWarn
     delete options.warn
 
@@ -56,10 +56,10 @@ export function createCompileToFunctionFn (compile: Function): Function {
       return cache[key]
     }
 
-    // compile
+    // compile，通过这一步就得到了我们编译之后的数据
     const compiled = compile(template, options)
 
-    // check compilation errors/tips
+    // check compilation errors/tips 对编译后的错误信息和提示进行显示
     if (process.env.NODE_ENV !== 'production') {
       if (compiled.errors && compiled.errors.length) {
         if (options.outputSourceRange) {
@@ -87,7 +87,7 @@ export function createCompileToFunctionFn (compile: Function): Function {
       }
     }
 
-    // turn code into functions
+    // turn code into functions，把render代码字符串转化为函数
     const res = {}
     const fnGenErrors = []
     res.render = createFunction(compiled.render, fnGenErrors)

@@ -714,25 +714,32 @@
    * A dep is an observable that can have multiple
    * directives subscribing to it.
    */
+  // Dep类是为了让每一个监测对象都有多个watcher实例，用subs数组来存储
   var Dep = function Dep () {
     this.id = uid++;
     this.subs = [];
   };
 
+  //向dep的观察者列表subs添加观察者
   Dep.prototype.addSub = function addSub (sub) {
     this.subs.push(sub);
   };
 
+  //从dep的观察者列表subs移除观察者
   Dep.prototype.removeSub = function removeSub (sub) {
     remove(this.subs, sub);
   };
 
+  //依赖收集：如果当前有观察者，将该dep放进当前观察者的deps中
+  //同时，将当前观察者放入观察者列表subs中
+  // 这里的Dep.target就是Watcer实例，this是Dep的实例
   Dep.prototype.depend = function depend () {
     if (Dep.target) {
       Dep.target.addDep(this);
     }
   };
 
+  // 遍历subs当中的watcher，运行每个观察者的update接口
   Dep.prototype.notify = function notify () {
     // stabilize the subscriber list first
     var subs = this.subs.slice();
@@ -750,16 +757,22 @@
   // The current target watcher being evaluated.
   // This is globally unique because only one watcher
   // can be evaluated at a time.
+  //Dep.target是观察者，这是全局唯一的，因为在任何时候只有一个观察者被处理。
   Dep.target = null;
+  //待处理的观察者队列
   var targetStack = [];
 
   function pushTarget (target) {
+     //如果当前有正在处理的观察者，将他压入待处理队列
     targetStack.push(target);
+    //将Dep.target指向需要处理的观察者
     Dep.target = target;
   }
 
   function popTarget () {
+    //将栈顶第一项移除
     targetStack.pop();
+    //将Dep.target指向栈顶新的观察者，
     Dep.target = targetStack[targetStack.length - 1];
   }
 
@@ -934,7 +947,7 @@
     this.value = value;
     this.dep = new Dep();
     this.vmCount = 0;
-    def(value, '__ob__', this); //给value新增一个__ob__属性，值为该value的Observer实例
+    def(value, '__ob__', this); //给value新增一个__ob__属性，值为this,也就是该value的Observer实例
     if (Array.isArray(value)) { //数组时的处理逻辑
       if (hasProto) {
         protoAugment(value, arrayMethods);
@@ -952,6 +965,7 @@
    * getter/setters. This method should only be called when
    * value type is Object.
    */
+  // 遍历对象的每一个属性，使之都变为响应式对象
   Observer.prototype.walk = function walk (obj) {
     var keys = Object.keys(obj);
     for (var i = 0; i < keys.length; i++) {
@@ -1033,6 +1047,8 @@
     customSetter,
     shallow
   ) {
+    //监听属性key
+    //关键点：在闭包中声明一个Dep实例，用于保存watcher实例
     var dep = new Dep();
 
     // 如果属性不能重新定义，直接返回
@@ -1042,10 +1058,10 @@
     }
 
     // cater for pre-defined getter/setters
-    // 获得原有的get和set
+    /*如果之前该对象已经预设了getter以及setter函数则将其取出来，新定义的getter/setter中会将其执行，保证不会覆盖之前已经定义的getter/setter。*/
     var getter = property && property.get;
     var setter = property && property.set;
-    // 如果不存在get或者存在set，并且参数的长度等于2
+    // 如果不存在get或者存在set，并且参数的长度等于2，设置val的值
     if ((!getter || setter) && arguments.length === 2) {
       val = obj[key];
     }
@@ -1057,6 +1073,8 @@
       get: function reactiveGetter () {
         var value = getter ? getter.call(obj) : val;
         if (Dep.target) {
+          // get的时候对数据进行劫持
+          //将dep放进当前观察者的deps中，同时，将该观察者放入dep中，等待变更通知
           dep.depend();
           if (childOb) {
             childOb.dep.depend();
@@ -1085,6 +1103,7 @@
           val = newVal;
         }
         childOb = !shallow && observe(newVal);
+        // 派发更新
         dep.notify();
       }
     });
@@ -2038,8 +2057,15 @@
     };
   }
 
+  /**
+   * @description: nextTick函数
+   * @param {*} cb flushSchedulerQueue（）回调函数
+   * @param {*} ctx 上下文
+   * @return {*}
+   */
   function nextTick (cb, ctx) {
     var _resolve;
+    // callback是回调函数列表
     callbacks.push(function () {
       if (cb) {
         try {
@@ -4005,7 +4031,8 @@
 
   function lifecycleMixin (Vue) {
     /**
-     * @description: _render调用的_update方法，作用是把 VNode 渲染成真实的 DOM
+     * @description: _render调用的_update方法，作用是把 VNode 渲染成真实的 DOM。
+     * 这一步完成之后，页面就会显示出检测对象的值。
      * @param {*} vnode
      * @param {*} hydrating
      * @return {*}
@@ -4094,7 +4121,7 @@
   }
 
   /**
-   * @description: mount实际调用方法的实现。
+   * @description: mount实际调用方法的实现。此时render函数已经生成
    * mountComponent 核心就是先实例化一个渲染Watcher，在它的回调函数中会调用 updateComponent 方法，
    * 在此方法中调用 vm._render 方法先生成虚拟 Node，最终调用 vm._update 更新 DOM。
    * @param {*}
@@ -4148,6 +4175,7 @@
         measure(("vue " + name + " patch"), startTag, endTag);
       };
     } else {
+      // 生成updateComponent函数
       updateComponent = function () {
         vm._update(vm._render(), hydrating);
       };
@@ -4372,7 +4400,7 @@
    * Flush both queues and run the watchers.
    */
   function flushSchedulerQueue () {
-    currentFlushTimestamp = getNow();
+    currentFlushTimestamp = getNow(); //获取当前的时间戳
     flushing = true;
     var watcher, id;
 
@@ -4384,6 +4412,11 @@
     //    user watchers are created before the render watcher)
     // 3. If a component is destroyed during a parent component's watcher run,
     //    its watchers can be skipped.
+    // 刷新之前对队列做一次排序
+    // 这个操作可以保证：
+    // 1. 组件都是从父组件更新到子组件（因为父组件总是在子组件之前创建）
+    // 2. 一个组件自定义的watchers都是在它的渲染watcher之前执行（因为自定义watchers都是在渲染watchers之前执行（render watcher））
+    // 3. 如果一个组件在父组件的watcher执行期间刚好被销毁，那么这些watchers都将会被跳过
     queue.sort(function (a, b) { return a.id - b.id; });
 
     // do not cache length because more watchers might be pushed
@@ -4391,6 +4424,11 @@
     for (index = 0; index < queue.length; index++) {
       watcher = queue[index];
       if (watcher.before) {
+        // before () {
+        //   if (vm._isMounted && !vm._isDestroyed) {
+        //     callHook(vm, 'beforeUpdate') // beforeUpdate钩子函数调用
+        //   }
+        // }
         watcher.before();
       }
       id = watcher.id;
@@ -4466,13 +4504,17 @@
    */
   function queueWatcher (watcher) {
     var id = watcher.id;
+    // 判断是否已经在队列中，防止重复触发
     if (has[id] == null) {
       has[id] = true;
+      //没有刷新队列的话，直接将wacher插入队列中排队
       if (!flushing) {
         queue.push(watcher);
       } else {
         // if already flushing, splice the watcher based on its id
         // if already past its id, it will be run next immediately.
+        // 如果正在刷新，那么这个watcher会按照id的排序插入进去
+        // 如果已经刷新了这个watcher，那么它将会在下次刷新再次被执行
         var i = queue.length - 1;
         while (i > index && queue[i].id > watcher.id) {
           i--;
@@ -4480,13 +4522,16 @@
         queue.splice(i + 1, 0, watcher);
       }
       // queue the flush
+       // 排队进行刷新
       if (!waiting) {
         waiting = true;
 
+         // 如果是开发环境，同时配置了async为false，那么直接调用flushSchedulerQueue
         if ( !config.async) {
           flushSchedulerQueue();
           return
         }
+         // 否则在nextTick里调用flushSchedulerQueue
         nextTick(flushSchedulerQueue);
       }
     }
@@ -4505,6 +4550,7 @@
    */
   /**
    * @description: Watcher类
+   * 实例分为三种情况：渲染 watcher（render-watcher）、计算属性 watcher（computed-watcher）、侦听器 watcher（normal-watcher）
    * @param {*}
    * @return {*}
    */
@@ -4568,10 +4614,15 @@
    * Evaluate the getter, and re-collect dependencies.
    */
   Watcher.prototype.get = function get () {
+    //收集依赖
     pushTarget(this);
     var value;
     var vm = this.vm;
     try {
+      // 这一步完成之后数据就会更新，因为这里调用的getter函数就是
+      // updateComponent = () => {
+      // vm._update(vm._render(), hydrating)
+      // }
       value = this.getter.call(vm, vm);
     } catch (e) {
       if (this.user) {
@@ -4585,6 +4636,7 @@
       if (this.deep) {
         traverse(value);
       }
+      /*将观察者实例从target栈中取出并设置给Dep.target*/
       popTarget();
       this.cleanupDeps();
     }
@@ -4593,10 +4645,13 @@
 
   /**
    * Add a dependency to this directive.
+   * newDepIds是Set类型
+   * newDeps是数组类型
    */
   Watcher.prototype.addDep = function addDep (dep) {
     var id = dep.id;
     if (!this.newDepIds.has(id)) {
+
       this.newDepIds.add(id);
       this.newDeps.push(dep);
       if (!this.depIds.has(id)) {
@@ -4645,6 +4700,7 @@
    * Scheduler job interface.
    * Will be called by the scheduler.
    */
+  // 调度器接口
   Watcher.prototype.run = function run () {
     if (this.active) {
       var value = this.get();
@@ -5114,9 +5170,9 @@
       initEvents(vm);  // 初始化事件
       initRender(vm); // 初始化渲染
       callHook(vm, 'beforeCreate'); // beforeCreate钩子函数调用
-      initInjections(vm); // resolve injections before data/props  //初始化injections
+      initInjections(vm);  //初始化injections
       initState(vm); // 初始化props,methods,data,computed,watch
-      initProvide(vm); // resolve provide after data/props  // 初始化 provide
+      initProvide(vm); // 初始化 provide
       callHook(vm, 'created'); // created钩子函数调用
 
       /* istanbul ignore if */
@@ -11851,7 +11907,7 @@
       options,
       vm
     ) {
-      options = extend({}, options);
+      options = extend({}, options); // 把options中可以被遍历的属性取出来，
       var warn$1 = options.warn || warn;
       delete options.warn;
 
@@ -11881,10 +11937,10 @@
         return cache[key]
       }
 
-      // compile
+      // compile，通过这一步就得到了我们编译之后的数据
       var compiled = compile(template, options);
 
-      // check compilation errors/tips
+      // check compilation errors/tips 对编译后的错误信息和提示进行显示
       {
         if (compiled.errors && compiled.errors.length) {
           if (options.outputSourceRange) {
@@ -11912,7 +11968,7 @@
         }
       }
 
-      // turn code into functions
+      // turn code into functions，把render代码字符串转化为函数
       var res = {};
       var fnGenErrors = [];
       res.render = createFunction(compiled.render, fnGenErrors);
@@ -11947,6 +12003,7 @@
 
   function createCompilerCreator (baseCompile) {
     return function createCompiler (baseOptions) {
+      // 模板编译函数
       function compile (
         template,
         options

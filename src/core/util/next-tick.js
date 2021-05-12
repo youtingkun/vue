@@ -84,8 +84,15 @@ if (typeof Promise !== 'undefined' && isNative(Promise)) {
   }
 }
 
+/**
+ * @description: nextTick函数
+ * @param {*} cb flushSchedulerQueue（）回调函数
+ * @param {*} ctx 上下文
+ * @return {*}
+ */
 export function nextTick (cb?: Function, ctx?: Object) {
   let _resolve
+  // callback是回调函数列表
   callbacks.push(() => {
     if (cb) {
       try {

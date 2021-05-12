@@ -69,7 +69,7 @@ if (inBrowser && !isIE) {
  * Flush both queues and run the watchers.
  */
 function flushSchedulerQueue () {
-  currentFlushTimestamp = getNow()
+  currentFlushTimestamp = getNow() //获取当前的时间戳
   flushing = true
   let watcher, id
 
@@ -81,6 +81,11 @@ function flushSchedulerQueue () {
   //    user watchers are created before the render watcher)
   // 3. If a component is destroyed during a parent component's watcher run,
   //    its watchers can be skipped.
+  // 刷新之前对队列做一次排序
+  // 这个操作可以保证：
+  // 1. 组件都是从父组件更新到子组件（因为父组件总是在子组件之前创建）
+  // 2. 一个组件自定义的watchers都是在它的渲染watcher之前执行（因为自定义watchers都是在渲染watchers之前执行（render watcher））
+  // 3. 如果一个组件在父组件的watcher执行期间刚好被销毁，那么这些watchers都将会被跳过
   queue.sort((a, b) => a.id - b.id)
 
   // do not cache length because more watchers might be pushed
@@ -88,6 +93,11 @@ function flushSchedulerQueue () {
   for (index = 0; index < queue.length; index++) {
     watcher = queue[index]
     if (watcher.before) {
+      // before () {
+      //   if (vm._isMounted && !vm._isDestroyed) {
+      //     callHook(vm, 'beforeUpdate') // beforeUpdate钩子函数调用
+      //   }
+      // }
       watcher.before()
     }
     id = watcher.id
@@ -163,13 +173,17 @@ function callActivatedHooks (queue) {
  */
 export function queueWatcher (watcher: Watcher) {
   const id = watcher.id
+  // 判断是否已经在队列中，防止重复触发
   if (has[id] == null) {
     has[id] = true
+    //没有刷新队列的话，直接将wacher插入队列中排队
     if (!flushing) {
       queue.push(watcher)
     } else {
       // if already flushing, splice the watcher based on its id
       // if already past its id, it will be run next immediately.
+      // 如果正在刷新，那么这个watcher会按照id的排序插入进去
+      // 如果已经刷新了这个watcher，那么它将会在下次刷新再次被执行
       let i = queue.length - 1
       while (i > index && queue[i].id > watcher.id) {
         i--
@@ -177,13 +191,16 @@ export function queueWatcher (watcher: Watcher) {
       queue.splice(i + 1, 0, watcher)
     }
     // queue the flush
+     // 排队进行刷新
     if (!waiting) {
       waiting = true
 
+       // 如果是开发环境，同时配置了async为false，那么直接调用flushSchedulerQueue
       if (process.env.NODE_ENV !== 'production' && !config.async) {
         flushSchedulerQueue()
         return
       }
+       // 否则在nextTick里调用flushSchedulerQueue
       nextTick(flushSchedulerQueue)
     }
   }
