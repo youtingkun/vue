@@ -401,6 +401,7 @@ export function createPatchFunction (backend) {
     }
   }
 
+ // diff核心算法
   function updateChildren (parentElm, oldCh, newCh, insertedVnodeQueue, removeOnly) {
     let oldStartIdx = 0
     let newStartIdx = 0
@@ -697,7 +698,7 @@ export function createPatchFunction (backend) {
     }
   }
   /**
-   * @description:  _update调用的patch方法
+   * @description:  _update调用的patch方法，
    * @param {*} oldVnode 表示旧的 VNode 节点，它也可以不存在或者是一个 DOM 对象；
    * @param {*} vnode 表示执行 _render 后返回的 VNode 的节点；
    * @param {*} hydrating hydrating 表示是否是服务端渲染；
