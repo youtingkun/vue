@@ -134,9 +134,12 @@ export default {
         // so cid alone is not enough (#3269)
         ? componentOptions.Ctor.cid + (componentOptions.tag ? `::${componentOptions.tag}` : '')
         : vnode.key
+        /* 如果命中缓存，则直接从缓存中拿 vnode 的组件实例 */
       if (cache[key]) {
         vnode.componentInstance = cache[key].componentInstance
         // make current key freshest
+        /* 调整该组件key的顺序，将其从原来的地方删掉并重新放在最后一个 */
+        // 需要删除之后再推入的时候是因为，当长度大于max的时候会推出第一个，以保证后面的是经常被用到的
         remove(keys, key)
         keys.push(key)
       } else {
