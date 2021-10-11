@@ -1,37 +1,50 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Document</title>
-  <script src="../../dist/vue.js"></script>
-</head>
-<body>
-  <div id="app" >
-    <div @click="handleAdd">{{a}}</div>
-    <div>{{b}}</div>
-  </div>
-  <script>
-    new Vue({
-      el: '#app',
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <script src="../../dist/vue.js"></script>
+  </head>
+  <body>
+    <div id="app">
+      <div @click="handleAdd">{{obj.a}}</div>
+      <div>{{b}}</div>
+      <div>{{c}}</div>
+    </div>
+    <script>
+      new Vue({
+        el: "#app",
 
-      data() {
-        return {a:1}
-      },
-      methods:{
-        handleAdd(){
-          this.a++
-        }
-      },
-      computed:{
-        b:{
-          get(){
-            return this.a *2;
-          }
-        }
-      }
-    })
-  </script>
-</body>
+        data() {
+          return {
+            obj: {
+              a: 1,
+            },
+          };
+        },
+        methods: {
+          handleAdd() {
+            this.obj.a++;
+          },
+        },
+        mounted() {
+          console.log("监听之后的对象", this.obj);
+        },
+        computed: {
+          b: {
+            get() {
+              return this.obj.a * 2;
+            },
+          },
+          c: {
+            get() {
+              return this.obj.a * 3;
+            },
+          },
+        },
+      });
+    </script>
+  </body>
 </html>

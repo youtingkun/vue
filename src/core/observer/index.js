@@ -149,10 +149,10 @@ export function defineReactive (
   customSetter?: ?Function,
   shallow?: boolean
 ) {
-  //监听属性key
-  //关键点：在闭包中声明一个Dep实例，用于保存watcher实例
+  // 关键点：为每个属性创建 Dep
+  // 在闭包中声明一个Dep实例，用于保存watcher实例
   const dep = new Dep()
-
+  console.log("defineReactive",obj,key,val);
   // 如果属性不能重新定义，直接返回
   const property = Object.getOwnPropertyDescriptor(obj, key)
   if (property && property.configurable === false) {
@@ -174,6 +174,7 @@ export function defineReactive (
     configurable: true,
     get: function reactiveGetter () {
       const value = getter ? getter.call(obj) : val
+      // 如果有 target 标识，则进行依赖搜集
       if (Dep.target) {
         // get的时候对数据进行劫持
         //将dep放进当前观察者的deps中，同时，将该观察者放入dep中，等待变更通知
@@ -205,7 +206,7 @@ export function defineReactive (
         val = newVal
       }
       childOb = !shallow && observe(newVal)
-      // 派发更新
+      // 修改数据时，派发更新，通知页面重新渲染
       dep.notify()
     }
   })

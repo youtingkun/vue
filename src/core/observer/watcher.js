@@ -87,6 +87,7 @@ export default class Watcher {
       ? expOrFn.toString()
       : ''
     // parse expression for getter
+    // 将 vm._render 方法赋值给 getter。expOrFn 就是 vm._render，
     if (typeof expOrFn === 'function') {
       this.getter = expOrFn
     } else {
@@ -143,11 +144,12 @@ export default class Watcher {
    * Add a dependency to this directive.
    * newDepIds是Set类型
    * newDeps是数组类型
+   * 将当前的 Watcher 添加到 Dep 收集池中
    */
   addDep (dep: Dep) {
+    console.log(dep);
     const id = dep.id
     if (!this.newDepIds.has(id)) {
-
       this.newDepIds.add(id)
       this.newDeps.push(dep)
       if (!this.depIds.has(id)) {
@@ -188,6 +190,7 @@ export default class Watcher {
     } else if (this.sync) {
       this.run()
     } else {
+       // 开启异步队列，批量更新 Watcher
       queueWatcher(this)
     }
   }
@@ -199,6 +202,7 @@ export default class Watcher {
   // 调度器接口
   run () {
     if (this.active) {
+      // 和初始化一样，会调用 get 方法，更新视图
       const value = this.get()
       if (
         value !== this.value ||

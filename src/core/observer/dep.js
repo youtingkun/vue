@@ -33,9 +33,10 @@ export default class Dep {
 
   //依赖收集：如果当前有观察者，将该dep放进当前观察者的deps中
   //同时，将当前观察者放入观察者列表subs中
-  // 这里的Dep.target就是Watcer实例，this是Dep的实例
+  //这里的Dep.target就是Watcer实例，this是Dep的实例
   depend () {
     if (Dep.target) {
+      console.log("dep.depend()",Dep.target);
       Dep.target.addDep(this)
     }
   }

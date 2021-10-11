@@ -732,9 +732,10 @@
 
   //依赖收集：如果当前有观察者，将该dep放进当前观察者的deps中
   //同时，将当前观察者放入观察者列表subs中
-  // 这里的Dep.target就是Watcer实例，this是Dep的实例
+  //这里的Dep.target就是Watcer实例，this是Dep的实例
   Dep.prototype.depend = function depend () {
     if (Dep.target) {
+      console.log("dep.depend()",Dep.target);
       Dep.target.addDep(this);
     }
   };
@@ -1047,10 +1048,10 @@
     customSetter,
     shallow
   ) {
-    //监听属性key
-    //关键点：在闭包中声明一个Dep实例，用于保存watcher实例
+    // 关键点：为每个属性创建 Dep
+    // 在闭包中声明一个Dep实例，用于保存watcher实例
     var dep = new Dep();
-
+    console.log("defineReactive",obj,key,val);
     // 如果属性不能重新定义，直接返回
     var property = Object.getOwnPropertyDescriptor(obj, key);
     if (property && property.configurable === false) {
@@ -1072,6 +1073,7 @@
       configurable: true,
       get: function reactiveGetter () {
         var value = getter ? getter.call(obj) : val;
+        // 如果有 target 标识，则进行依赖搜集
         if (Dep.target) {
           // get的时候对数据进行劫持
           //将dep放进当前观察者的deps中，同时，将该观察者放入dep中，等待变更通知
@@ -1103,7 +1105,7 @@
           val = newVal;
         }
         childOb = !shallow && observe(newVal);
-        // 派发更新
+        // 修改数据时，派发更新，通知页面重新渲染
         dep.notify();
       }
     });
@@ -3887,6 +3889,7 @@
     target = undefined;
   }
 
+  // 向原型上挂载$on、$emit、$off、$once四个方法
   function eventsMixin (Vue) {
     var hookRE = /^hook:/;
     Vue.prototype.$on = function (event, fn) {
@@ -4591,6 +4594,7 @@
     this.expression =  expOrFn.toString()
       ;
     // parse expression for getter
+    // 将 vm._render 方法赋值给 getter。expOrFn 就是 vm._render，
     if (typeof expOrFn === 'function') {
       this.getter = expOrFn;
     } else {
@@ -4647,11 +4651,12 @@
    * Add a dependency to this directive.
    * newDepIds是Set类型
    * newDeps是数组类型
+   * 将当前的 Watcher 添加到 Dep 收集池中
    */
   Watcher.prototype.addDep = function addDep (dep) {
+    console.log(dep);
     var id = dep.id;
     if (!this.newDepIds.has(id)) {
-
       this.newDepIds.add(id);
       this.newDeps.push(dep);
       if (!this.depIds.has(id)) {
@@ -4692,6 +4697,7 @@
     } else if (this.sync) {
       this.run();
     } else {
+       // 开启异步队列，批量更新 Watcher
       queueWatcher(this);
     }
   };
@@ -4703,6 +4709,7 @@
   // 调度器接口
   Watcher.prototype.run = function run () {
     if (this.active) {
+      // 和初始化一样，会调用 get 方法，更新视图
       var value = this.get();
       if (
         value !== this.value ||
@@ -5558,9 +5565,12 @@
           // so cid alone is not enough (#3269)
           ? componentOptions.Ctor.cid + (componentOptions.tag ? ("::" + (componentOptions.tag)) : '')
           : vnode.key;
+          /* 如果命中缓存，则直接从缓存中拿 vnode 的组件实例 */
         if (cache[key]) {
           vnode.componentInstance = cache[key].componentInstance;
           // make current key freshest
+          /* 调整该组件key的顺序，将其从原来的地方删掉并重新放在最后一个 */
+          // 需要删除之后再推入的时候是因为，当长度大于max的时候会推出第一个，以保证后面的是经常被用到的
           remove(keys, key);
           keys.push(key);
         } else {
@@ -12217,4 +12227,3 @@
   return Vue;
 
 })));
-//# sourceMappingURL=vue.js.map
