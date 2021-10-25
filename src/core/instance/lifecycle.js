@@ -34,7 +34,7 @@ export function setActiveInstance(vm: Component) {
  * @param {*} vm
  * @return {*}
  */
-export function initLifecycle (vm: Component) {
+export function initLifecycle(vm: Component) {
   const options = vm.$options
 
   // locate first non-abstract parent
@@ -65,7 +65,7 @@ export function initLifecycle (vm: Component) {
   vm._isBeingDestroyed = false
 }
 
-export function lifecycleMixin (Vue: Class<Component>) {
+export function lifecycleMixin(Vue: Class<Component>) {
   /**
    * @description: _render调用的_update方法，作用是把 VNode 渲染成真实的 DOM。
    * 这一步完成之后，页面就会显示出检测对象的值。
@@ -163,7 +163,7 @@ export function lifecycleMixin (Vue: Class<Component>) {
  * @param {*}
  * @return {*}
  */
-export function mountComponent (
+export function mountComponent(
   vm: Component,
   el: ?Element,
   hydrating?: boolean
@@ -220,8 +220,9 @@ export function mountComponent (
   // we set this to vm._watcher inside the watcher's constructor
   // since the watcher's initial patch may call $forceUpdate (e.g. inside child
   // component's mounted hook), which relies on vm._watcher being already defined
+  // 实例化Watcher
   new Watcher(vm, updateComponent, noop, {
-    before () {
+    before() {
       if (vm._isMounted && !vm._isDestroyed) {
         callHook(vm, 'beforeUpdate') // beforeUpdate钩子函数调用
       }
@@ -238,7 +239,7 @@ export function mountComponent (
   return vm
 }
 
-export function updateChildComponent (
+export function updateChildComponent(
   vm: Component,
   propsData: ?Object,
   listeners: ?Object,
@@ -319,14 +320,14 @@ export function updateChildComponent (
   }
 }
 
-function isInInactiveTree (vm) {
+function isInInactiveTree(vm) {
   while (vm && (vm = vm.$parent)) {
     if (vm._inactive) return true
   }
   return false
 }
 
-export function activateChildComponent (vm: Component, direct?: boolean) {
+export function activateChildComponent(vm: Component, direct?: boolean) {
   if (direct) {
     vm._directInactive = false
     if (isInInactiveTree(vm)) {
@@ -344,7 +345,7 @@ export function activateChildComponent (vm: Component, direct?: boolean) {
   }
 }
 
-export function deactivateChildComponent (vm: Component, direct?: boolean) {
+export function deactivateChildComponent(vm: Component, direct?: boolean) {
   if (direct) {
     vm._directInactive = true
     if (isInInactiveTree(vm)) {
@@ -360,7 +361,7 @@ export function deactivateChildComponent (vm: Component, direct?: boolean) {
   }
 }
 
-export function callHook (vm: Component, hook: string) {
+export function callHook(vm: Component, hook: string) {
   // #7573 disable dep collection when invoking lifecycle hooks
   pushTarget()
   // 这里获取到的是一个钩子函数数组。因为有mixin，会存在多个同名的生命周期

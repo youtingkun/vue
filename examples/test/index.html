@@ -10,8 +10,7 @@
   <body>
     <div id="app">
       <div @click="handleAdd">{{obj.a}}</div>
-      <div>{{b}}</div>
-      <div>{{c}}</div>
+      <div>{{obj.a * x}}</div>
     </div>
     <script>
       new Vue({
@@ -19,18 +18,23 @@
 
         data() {
           return {
-            obj: {
-              a: 1,
-            },
+            obj: { a: 1 },
+            x: 2,
           };
         },
         methods: {
           handleAdd() {
             this.obj.a++;
+            this.x++;
           },
         },
         mounted() {
           console.log("监听之后的对象", this.obj);
+        },
+        watch: {
+          "obj.a": function (val, oldVal) {
+            console.log("new: %s, old: %s", val, oldVal);
+          },
         },
         computed: {
           b: {

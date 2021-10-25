@@ -715,8 +715,9 @@
    * directives subscribing to it.
    */
   // Dep类是为了让每一个监测对象都有多个watcher实例，用subs数组来存储
-  var Dep = function Dep () {
+  var Dep = function Dep() {
     this.id = uid++;
+    // console.log("uid", this.id, this);
     this.subs = [];
   };
 
@@ -735,7 +736,7 @@
   //这里的Dep.target就是Watcer实例，this是Dep的实例
   Dep.prototype.depend = function depend () {
     if (Dep.target) {
-      console.log("dep.depend()",Dep.target);
+      // console.log("dep.depend()", Dep.target);
       Dep.target.addDep(this);
     }
   };
@@ -743,7 +744,7 @@
   // 遍历subs当中的watcher，运行每个观察者的update接口
   Dep.prototype.notify = function notify () {
     // stabilize the subscriber list first
-    var subs = this.subs.slice();
+    var subs = this.subs.slice(); // 拷贝数组
     if ( !config.async) {
       // subs aren't sorted in scheduler if not running async
       // we need to sort them now to make sure they fire in correct
@@ -763,14 +764,14 @@
   //待处理的观察者队列
   var targetStack = [];
 
-  function pushTarget (target) {
-     //如果当前有正在处理的观察者，将他压入待处理队列
+  function pushTarget(target) {
+    //如果当前有正在处理的观察者，将他压入待处理队列
     targetStack.push(target);
     //将Dep.target指向需要处理的观察者
     Dep.target = target;
   }
 
-  function popTarget () {
+  function popTarget() {
     //将栈顶第一项移除
     targetStack.pop();
     //将Dep.target指向栈顶新的观察者，
@@ -929,7 +930,7 @@
    */
   var shouldObserve = true;
 
-  function toggleObserving (value) {
+  function toggleObserving(value) {
     shouldObserve = value;
   }
 
@@ -944,19 +945,23 @@
    * @param {*}
    * @return {*}
    */
-  var Observer = function Observer (value) {
+  var Observer = function Observer(value) {
     this.value = value;
     this.dep = new Dep();
     this.vmCount = 0;
-    def(value, '__ob__', this); //给value新增一个__ob__属性，值为this,也就是该value的Observer实例
-    if (Array.isArray(value)) { //数组时的处理逻辑
+    def(value, "__ob__", this); //给value新增一个__ob__属性，值为this,也就是该value的Observer实例
+    // console.log("Observer.construcotr", value, "dep:", this.dep);
+    if (Array.isArray(value)) {
+      //数组时的处理逻辑
       if (hasProto) {
         protoAugment(value, arrayMethods);
       } else {
         copyAugment(value, arrayMethods, arrayKeys);
       }
       this.observeArray(value);
-    } else { // 对象时的处理逻辑
+    } else {
+      // console.log("walk(value)", value.__ob__.dep);
+      // 对象时的处理逻辑
       this.walk(value);
     }
   };
@@ -989,7 +994,7 @@
    * Augment a target Object or Array by intercepting
    * the prototype chain using __proto__
    */
-  function protoAugment (target, src) {
+  function protoAugment(target, src) {
     /* eslint-disable no-proto */
     target.__proto__ = src;
     /* eslint-enable no-proto */
@@ -1000,7 +1005,7 @@
    * hidden properties.
    */
   /* istanbul ignore next */
-  function copyAugment (target, src, keys) {
+  function copyAugment(target, src, keys) {
     for (var i = 0, l = keys.length; i < l; i++) {
       var key = keys[i];
       def(target, key, src[key]);
@@ -1013,12 +1018,12 @@
    * or the existing observer if the value already has one.
    */
 
-  function observe (value, asRootData) {
+  function observe(value, asRootData) {
     if (!isObject(value) || value instanceof VNode) {
-      return
+      return;
     }
     var ob;
-    if (hasOwn(value, '__ob__') && value.__ob__ instanceof Observer) {
+    if (hasOwn(value, "__ob__") && value.__ob__ instanceof Observer) {
       ob = value.__ob__;
     } else if (
       shouldObserve &&
@@ -1032,7 +1037,7 @@
     if (asRootData && ob) {
       ob.vmCount++;
     }
-    return ob
+    return ob;
   }
 
   /**
@@ -1041,21 +1046,22 @@
    * @param { String } key 对象的key
    * @param { Any } val 对象的某个key的值
    */
-  function defineReactive (
+  function defineReactive(
     obj,
     key,
     val,
     customSetter,
     shallow
   ) {
-    // 关键点：为每个属性创建 Dep
-    // 在闭包中声明一个Dep实例，用于保存watcher实例
+    // 为每个属性创建 Dep
+    // 关键点：在闭包中声明一个Dep实例，用于保存watcher实例
     var dep = new Dep();
-    console.log("defineReactive",obj,key,val);
+    // console.log("dep", dep.id, obj);
+    // console.log("Dep类：", Object.prototype.toString.call(dep)); //[object Object] Dep类是一个对象
     // 如果属性不能重新定义，直接返回
     var property = Object.getOwnPropertyDescriptor(obj, key);
     if (property && property.configurable === false) {
-      return
+      return;
     }
 
     // cater for pre-defined getter/setters
@@ -1071,7 +1077,7 @@
     Object.defineProperty(obj, key, {
       enumerable: true,
       configurable: true,
-      get: function reactiveGetter () {
+      get: function reactiveGetter() {
         var value = getter ? getter.call(obj) : val;
         // 如果有 target 标识，则进行依赖搜集
         if (Dep.target) {
@@ -1085,20 +1091,20 @@
             }
           }
         }
-        return value
+        return value;
       },
-      set: function reactiveSetter (newVal) {
+      set: function reactiveSetter(newVal) {
         var value = getter ? getter.call(obj) : val;
         /* eslint-disable no-self-compare */
         if (newVal === value || (newVal !== newVal && value !== value)) {
-          return
+          return;
         }
         /* eslint-enable no-self-compare */
         if ( customSetter) {
           customSetter();
         }
         // #7981: for accessor properties without setter
-        if (getter && !setter) { return }
+        if (getter && !setter) { return; }
         if (setter) {
           setter.call(obj, newVal);
         } else {
@@ -1107,7 +1113,7 @@
         childOb = !shallow && observe(newVal);
         // 修改数据时，派发更新，通知页面重新渲染
         dep.notify();
-      }
+      },
     });
   }
 
@@ -1116,65 +1122,73 @@
    * triggers change notification if the property doesn't
    * already exist.
    */
-  function set (target, key, val) {
+  function set(target, key, val) {
     if (
+      
       (isUndef(target) || isPrimitive(target))
     ) {
-      warn(("Cannot set reactive property on undefined, null, or primitive value: " + ((target))));
+      warn(
+        ("Cannot set reactive property on undefined, null, or primitive value: " + ((target)))
+      );
     }
     if (Array.isArray(target) && isValidArrayIndex(key)) {
       target.length = Math.max(target.length, key);
       target.splice(key, 1, val);
-      return val
+      return val;
     }
     if (key in target && !(key in Object.prototype)) {
       target[key] = val;
-      return val
+      return val;
     }
     var ob = (target).__ob__;
     if (target._isVue || (ob && ob.vmCount)) {
-       warn(
-        'Avoid adding reactive properties to a Vue instance or its root $data ' +
-        'at runtime - declare it upfront in the data option.'
-      );
-      return val
+      
+        warn(
+          "Avoid adding reactive properties to a Vue instance or its root $data " +
+          "at runtime - declare it upfront in the data option."
+        );
+      return val;
     }
     if (!ob) {
       target[key] = val;
-      return val
+      return val;
     }
     defineReactive(ob.value, key, val);
     ob.dep.notify();
-    return val
+    return val;
   }
 
   /**
    * Delete a property and trigger change if necessary.
    */
-  function del (target, key) {
+  function del(target, key) {
     if (
+      
       (isUndef(target) || isPrimitive(target))
     ) {
-      warn(("Cannot delete reactive property on undefined, null, or primitive value: " + ((target))));
+      warn(
+        ("Cannot delete reactive property on undefined, null, or primitive value: " + ((target)))
+      );
     }
     if (Array.isArray(target) && isValidArrayIndex(key)) {
       target.splice(key, 1);
-      return
+      return;
     }
     var ob = (target).__ob__;
     if (target._isVue || (ob && ob.vmCount)) {
-       warn(
-        'Avoid deleting properties on a Vue instance or its root $data ' +
-        '- just set it to null.'
-      );
-      return
+      
+        warn(
+          "Avoid deleting properties on a Vue instance or its root $data " +
+          "- just set it to null."
+        );
+      return;
     }
     if (!hasOwn(target, key)) {
-      return
+      return;
     }
     delete target[key];
     if (!ob) {
-      return
+      return;
     }
     ob.dep.notify();
   }
@@ -1183,7 +1197,7 @@
    * Collect dependencies on array elements when the array is touched, since
    * we cannot intercept array element access like property getters.
    */
-  function dependArray (value) {
+  function dependArray(value) {
     for (var e = (void 0), i = 0, l = value.length; i < l; i++) {
       e = value[i];
       e && e.__ob__ && e.__ob__.dep.depend();
@@ -4001,7 +4015,7 @@
    * @param {*} vm
    * @return {*}
    */
-  function initLifecycle (vm) {
+  function initLifecycle(vm) {
     var options = vm.$options;
 
     // locate first non-abstract parent
@@ -4032,7 +4046,7 @@
     vm._isBeingDestroyed = false;
   }
 
-  function lifecycleMixin (Vue) {
+  function lifecycleMixin(Vue) {
     /**
      * @description: _render调用的_update方法，作用是把 VNode 渲染成真实的 DOM。
      * 这一步完成之后，页面就会显示出检测对象的值。
@@ -4130,7 +4144,7 @@
    * @param {*}
    * @return {*}
    */
-  function mountComponent (
+  function mountComponent(
     vm,
     el,
     hydrating
@@ -4187,8 +4201,9 @@
     // we set this to vm._watcher inside the watcher's constructor
     // since the watcher's initial patch may call $forceUpdate (e.g. inside child
     // component's mounted hook), which relies on vm._watcher being already defined
+    // 实例化Watcher
     new Watcher(vm, updateComponent, noop, {
-      before: function before () {
+      before: function before() {
         if (vm._isMounted && !vm._isDestroyed) {
           callHook(vm, 'beforeUpdate'); // beforeUpdate钩子函数调用
         }
@@ -4205,7 +4220,7 @@
     return vm
   }
 
-  function updateChildComponent (
+  function updateChildComponent(
     vm,
     propsData,
     listeners,
@@ -4286,14 +4301,14 @@
     }
   }
 
-  function isInInactiveTree (vm) {
+  function isInInactiveTree(vm) {
     while (vm && (vm = vm.$parent)) {
       if (vm._inactive) { return true }
     }
     return false
   }
 
-  function activateChildComponent (vm, direct) {
+  function activateChildComponent(vm, direct) {
     if (direct) {
       vm._directInactive = false;
       if (isInInactiveTree(vm)) {
@@ -4311,7 +4326,7 @@
     }
   }
 
-  function deactivateChildComponent (vm, direct) {
+  function deactivateChildComponent(vm, direct) {
     if (direct) {
       vm._directInactive = true;
       if (isInInactiveTree(vm)) {
@@ -4327,7 +4342,7 @@
     }
   }
 
-  function callHook (vm, hook) {
+  function callHook(vm, hook) {
     // #7573 disable dep collection when invoking lifecycle hooks
     pushTarget();
     // 这里获取到的是一个钩子函数数组。因为有mixin，会存在多个同名的生命周期
@@ -4557,7 +4572,7 @@
    * @param {*}
    * @return {*}
    */
-  var Watcher = function Watcher (
+  var Watcher = function Watcher(
     vm,
     expOrFn,
     cb,
@@ -4583,6 +4598,8 @@
     this.id = ++uid$1; // uid for batching
     this.active = true;
     this.dirty = this.lazy; // for lazy watchers
+    // 用来存储dep实例，这样watcher和dep就是多对多的关系
+    // 互相记录的原因是当一方被清除的时候可以及时更新相关对象
     this.deps = [];
     this.newDeps = [];
     this.depIds = new _Set();
@@ -4654,7 +4671,7 @@
    * 将当前的 Watcher 添加到 Dep 收集池中
    */
   Watcher.prototype.addDep = function addDep (dep) {
-    console.log(dep);
+    // console.log("Watcher.addDep()", dep);
     var id = dep.id;
     if (!this.newDepIds.has(id)) {
       this.newDepIds.add(id);
@@ -4690,6 +4707,7 @@
    * Subscriber interface.
    * Will be called when a dependency changes.
    */
+  // 执行update之后，页面的数据就会更新
   Watcher.prototype.update = function update () {
     /* istanbul ignore else */
     if (this.lazy) {
@@ -4697,7 +4715,7 @@
     } else if (this.sync) {
       this.run();
     } else {
-       // 开启异步队列，批量更新 Watcher
+      // 开启异步队列，批量更新 Watcher
       queueWatcher(this);
     }
   };
@@ -4776,43 +4794,44 @@
     enumerable: true,
     configurable: true,
     get: noop,
-    set: noop
+    set: noop,
   };
 
-  function proxy (target, sourceKey, key) {
-    sharedPropertyDefinition.get = function proxyGetter () {
-      return this[sourceKey][key]
+  function proxy(target, sourceKey, key) {
+    sharedPropertyDefinition.get = function proxyGetter() {
+      return this[sourceKey][key];
     };
-    sharedPropertyDefinition.set = function proxySetter (val) {
+    sharedPropertyDefinition.set = function proxySetter(val) {
       this[sourceKey][key] = val;
     };
     Object.defineProperty(target, key, sharedPropertyDefinition);
   }
 
-
-  function initState (vm) {
+  function initState(vm) {
     vm._watchers = [];
     var opts = vm.$options;
     if (opts.props) { initProps(vm, opts.props); } // 初始化props
     if (opts.methods) { initMethods(vm, opts.methods); } // 初始化methods
-    if (opts.data) { // 初始化data
+    if (opts.data) {
+      // 初始化data
       initData(vm);
-    } else { //如果没有，就把data当作空对象并将其转换成响应式
-      observe(vm._data = {}, true /* asRootData */);
+    } else {
+      //如果没有，就把data当作空对象并将其转换成响应式
+      observe((vm._data = {}), true /* asRootData */);
     }
     if (opts.computed) { initComputed(vm, opts.computed); } // 初始化computed
-    if (opts.watch && opts.watch !== nativeWatch) { // 初始化watch,从这里我们就知道是先实例化computed，再实例化的watch
+    if (opts.watch && opts.watch !== nativeWatch) {
+      // 初始化watch,从这里我们就知道是先实例化computed，再实例化的watch
       initWatch(vm, opts.watch);
     }
   }
 
-
-  function initProps (vm, propsOptions) {
+  function initProps(vm, propsOptions) {
     var propsData = vm.$options.propsData || {}; // 父组件传入的真实props数据。
-    var props = vm._props = {}; // 指向vm._props的指针
+    var props = (vm._props = {}); // 指向vm._props的指针
     // cache prop keys so that future props updates can iterate using Array
     // instead of dynamic object key enumeration.
-    var keys = vm.$options._propKeys = [];  // 指向vm.$options._propKeys的指针，缓存props对象中的key
+    var keys = (vm.$options._propKeys = []); // 指向vm.$options._propKeys的指针，缓存props对象中的key
     var isRoot = !vm.$parent; //当前组件是否为根组件
     // root instance props should be converted
     if (!isRoot) {
@@ -4824,8 +4843,10 @@
       /* istanbul ignore else */
       {
         var hyphenatedKey = hyphenate(key);
-        if (isReservedAttribute(hyphenatedKey) ||
-            config.isReservedAttr(hyphenatedKey)) {
+        if (
+          isReservedAttribute(hyphenatedKey) ||
+          config.isReservedAttr(hyphenatedKey)
+        ) {
           warn(
             ("\"" + hyphenatedKey + "\" is a reserved attribute and cannot be used as component prop."),
             vm
@@ -4835,9 +4856,9 @@
           if (!isRoot && !isUpdatingChildComponent) {
             warn(
               "Avoid mutating a prop directly since the value will be " +
-              "overwritten whenever the parent component re-renders. " +
-              "Instead, use a data or computed property based on the prop's " +
-              "value. Prop being mutated: \"" + key + "\"",
+                "overwritten whenever the parent component re-renders. " +
+                "Instead, use a data or computed property based on the prop's " +
+                "value. Prop being mutated: \"" + key + "\"",
               vm
             );
           }
@@ -4856,18 +4877,17 @@
   }
 
   // 初始化data值
-  function initData (vm) {
+  function initData(vm) {
     var data = vm.$options.data;
-    data = vm._data = typeof data === 'function'
-      ? getData(data, vm)
-      : data || {};
+    data = vm._data = typeof data === "function" ? getData(data, vm) : data || {};
     if (!isPlainObject(data)) {
       data = {};
-       warn(
-        'data functions should return an object:\n' +
-        'https://vuejs.org/v2/guide/components.html#data-Must-Be-a-Function',
-        vm
-      );
+      
+        warn(
+          "data functions should return an object:\n" +
+            "https://vuejs.org/v2/guide/components.html#data-Must-Be-a-Function",
+          vm
+        );
     }
     // proxy data on instance
     var keys = Object.keys(data);
@@ -4885,11 +4905,12 @@
         }
       }
       if (props && hasOwn(props, key)) {
-         warn(
-          "The data property \"" + key + "\" is already declared as a prop. " +
-          "Use prop default value instead.",
-          vm
-        );
+        
+          warn(
+            "The data property \"" + key + "\" is already declared as a prop. " +
+              "Use prop default value instead.",
+            vm
+          );
       } else if (!isReserved(key)) {
         /**
          * @description: 代理函数
@@ -4903,14 +4924,14 @@
     observe(data, true /* asRootData */);
   }
 
-  function getData (data, vm) {
+  function getData(data, vm) {
     // #7573 disable dep collection when invoking data getters
     pushTarget();
     try {
-      return data.call(vm, vm)
+      return data.call(vm, vm);
     } catch (e) {
       handleError(e, vm, "data()");
-      return {}
+      return {};
     } finally {
       popTarget();
     }
@@ -4918,20 +4939,17 @@
 
   var computedWatcherOptions = { lazy: true };
 
-  function initComputed (vm, computed) {
+  function initComputed(vm, computed) {
     // $flow-disable-line
-    var watchers = vm._computedWatchers = Object.create(null);
+    var watchers = (vm._computedWatchers = Object.create(null));
     // computed properties are just getters during SSR
     var isSSR = isServerRendering();
 
     for (var key in computed) {
       var userDef = computed[key];
-      var getter = typeof userDef === 'function' ? userDef : userDef.get;
+      var getter = typeof userDef === "function" ? userDef : userDef.get;
       if ( getter == null) {
-        warn(
-          ("Getter is missing for computed property \"" + key + "\"."),
-          vm
-        );
+        warn(("Getter is missing for computed property \"" + key + "\"."), vm);
       }
 
       if (!isSSR) {
@@ -4952,13 +4970,20 @@
       // 这就是为什么我们在computed里面写了属性之后，可以直接通过实例访问到
       if (!(key in vm)) {
         defineComputed(vm, key, userDef);
-      } else { //则在非生产环境下抛出警告
+      } else {
+        //则在非生产环境下抛出警告
         if (key in vm.$data) {
           warn(("The computed property \"" + key + "\" is already defined in data."), vm);
         } else if (vm.$options.props && key in vm.$options.props) {
-          warn(("The computed property \"" + key + "\" is already defined as a prop."), vm);
+          warn(
+            ("The computed property \"" + key + "\" is already defined as a prop."),
+            vm
+          );
         } else if (vm.$options.methods && key in vm.$options.methods) {
-          warn(("The computed property \"" + key + "\" is already defined as a method."), vm);
+          warn(
+            ("The computed property \"" + key + "\" is already defined as a method."),
+            vm
+          );
         }
       }
     }
@@ -4969,13 +4994,13 @@
    * @param {*}
    * @return {*}
    */
-  function defineComputed (
+  function defineComputed(
     target,
     key,
     userDef
   ) {
     var shouldCache = !isServerRendering();
-    if (typeof userDef === 'function') {
+    if (typeof userDef === "function") {
       sharedPropertyDefinition.get = shouldCache
         ? createComputedGetter(key)
         : createGetterInvoker(userDef);
@@ -4989,7 +5014,9 @@
       sharedPropertyDefinition.set = userDef.set || noop;
     }
     if (
-        sharedPropertyDefinition.set === noop) {
+      
+      sharedPropertyDefinition.set === noop
+    ) {
       sharedPropertyDefinition.set = function () {
         warn(
           ("Computed property \"" + key + "\" was assigned to but it has no setter."),
@@ -5000,8 +5027,8 @@
     Object.defineProperty(target, key, sharedPropertyDefinition);
   }
 
-  function createComputedGetter (key) {
-    return function computedGetter () {
+  function createComputedGetter(key) {
+    return function computedGetter() {
       var watcher = this._computedWatchers && this._computedWatchers[key];
       if (watcher) {
         if (watcher.dirty) {
@@ -5010,46 +5037,46 @@
         if (Dep.target) {
           watcher.depend();
         }
-        return watcher.value
+        return watcher.value;
       }
-    }
+    };
   }
 
   function createGetterInvoker(fn) {
-    return function computedGetter () {
-      return fn.call(this, this)
-    }
+    return function computedGetter() {
+      return fn.call(this, this);
+    };
   }
 
-  function initMethods (vm, methods) {
+  function initMethods(vm, methods) {
     var props = vm.$options.props;
     for (var key in methods) {
       {
-        if (typeof methods[key] !== 'function') {
+        if (typeof methods[key] !== "function") {
           warn(
-            "Method \"" + key + "\" has type \"" + (typeof methods[key]) + "\" in the component definition. " +
-            "Did you reference the function correctly?",
+            "Method \"" + key + "\" has type \"" + (typeof methods[
+              key
+            ]) + "\" in the component definition. " +
+              "Did you reference the function correctly?",
             vm
           );
         }
         if (props && hasOwn(props, key)) {
-          warn(
-            ("Method \"" + key + "\" has already been defined as a prop."),
-            vm
-          );
+          warn(("Method \"" + key + "\" has already been defined as a prop."), vm);
         }
-        if ((key in vm) && isReserved(key)) {
+        if (key in vm && isReserved(key)) {
           warn(
             "Method \"" + key + "\" conflicts with an existing Vue instance method. " +
-            "Avoid defining component methods that start with _ or $."
+              "Avoid defining component methods that start with _ or $."
           );
         }
       }
-      vm[key] = typeof methods[key] !== 'function' ? noop : bind(methods[key], vm);
+      vm[key] =
+        typeof methods[key] !== "function" ? noop : bind(methods[key], vm);
     }
   }
 
-  function initWatch (vm, watch) {
+  function initWatch(vm, watch) {
     for (var key in watch) {
       var handler = watch[key];
       if (Array.isArray(handler)) {
@@ -5062,7 +5089,7 @@
     }
   }
 
-  function createWatcher (
+  function createWatcher(
     vm,
     expOrFn,
     handler,
@@ -5072,26 +5099,30 @@
       options = handler;
       handler = handler.handler;
     }
-    if (typeof handler === 'string') {
+    if (typeof handler === "string") {
       handler = vm[handler];
     }
-    return vm.$watch(expOrFn, handler, options)
+    return vm.$watch(expOrFn, handler, options);
   }
 
   //向Vue原型上挂载vm.$set、vm.$delete和vm.$wa  tch三个实例方法
-  function stateMixin (Vue) {
+  function stateMixin(Vue) {
     // flow somehow has problems with directly declared definition object
     // when using Object.defineProperty, so we have to procedurally build up
     // the object here.
     var dataDef = {};
-    dataDef.get = function () { return this._data };
+    dataDef.get = function () {
+      return this._data;
+    };
     var propsDef = {};
-    propsDef.get = function () { return this._props };
+    propsDef.get = function () {
+      return this._props;
+    };
     {
       dataDef.set = function () {
         warn(
-          'Avoid replacing instance root $data. ' +
-          'Use nested data properties instead.',
+          "Avoid replacing instance root $data. " +
+            "Use nested data properties instead.",
           this
         );
       };
@@ -5099,8 +5130,8 @@
         warn("$props is readonly.", this);
       };
     }
-    Object.defineProperty(Vue.prototype, '$data', dataDef);
-    Object.defineProperty(Vue.prototype, '$props', propsDef);
+    Object.defineProperty(Vue.prototype, "$data", dataDef);
+    Object.defineProperty(Vue.prototype, "$props", propsDef);
 
     Vue.prototype.$set = set;
     Vue.prototype.$delete = del;
@@ -5112,7 +5143,7 @@
     ) {
       var vm = this;
       if (isPlainObject(cb)) {
-        return createWatcher(vm, expOrFn, cb, options)
+        return createWatcher(vm, expOrFn, cb, options);
       }
       options = options || {};
       options.user = true;
@@ -5123,9 +5154,9 @@
         invokeWithErrorHandling(cb, vm, [watcher.value], vm, info);
         popTarget();
       }
-      return function unwatchFn () {
+      return function unwatchFn() {
         watcher.teardown();
-      }
+      };
     };
   }
 
@@ -12227,3 +12258,4 @@
   return Vue;
 
 })));
+//# sourceMappingURL=vue.js.map
